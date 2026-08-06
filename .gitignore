@@ -1,3 +1,8 @@
+# Model files
+models/*.onnx
+models/*.engine
+models/*.plan
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

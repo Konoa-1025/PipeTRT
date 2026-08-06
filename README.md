@@ -27,7 +27,7 @@ PipeTRTは、自分自身の開発だけではなく、将来同じようにJets
 - [x] 既存実装の調査
 
 ### フェーズ1 8/6
-- [ ] Hand LandmarkのONNXモデルを用意
+- [x] Hand LandmarkのONNXモデルを用意
 - [ ] 入出力shapeを確認
 - [ ] 1枚の画像を前処理
 - [ ] ONNX Runtimeで推論
