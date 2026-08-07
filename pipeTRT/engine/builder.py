@@ -8,9 +8,7 @@ def build_engine(onnx_path, engine_path):
 
     builder = trt.Builder(logger)
 
-    network = builder.create_network(
-        1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-    )
+    network = builder.create_network()
 
     parser = trt.OnnxParser(
         network,
