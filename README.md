@@ -25,7 +25,7 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
 
 出力｜{ "score": 0.97, "center_x": ..., "center_y": ..., "width": ..., "height": ..., "keypoints": [...] }
 
-## 開発目標（ゴール）
+## 開発ロードマップ
 
 - [x] **フェーズ0：調査と開発目標の作成**
   - Palm Detectionの役割を調査する
@@ -33,7 +33,7 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - 入力と出力の仕様を確認する
   - 開発ロードマップを作成する
 
-- [ ] **フェーズ1：モデルの用意**
+- [x] **フェーズ1：モデルの用意**
   - Palm DetectionのONNXモデルを用意する
   - モデルの入力shapeを確認する
   - モデルの出力shapeを確認する
