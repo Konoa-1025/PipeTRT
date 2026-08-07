@@ -17,42 +17,20 @@ ENGINE_PATH = Path(
 
 CAMERA_ID = 0
 
-CAMERA_TESTS = (
-    {
-        "name": "DSHOW 1280x720 60FPS",
-        "backend": cv2.CAP_DSHOW,
-        "width": 1280,
-        "height": 720,
-        "fps": 60,
-    },
-    {
-        "name": "DSHOW 640x480 60FPS",
-        "backend": cv2.CAP_DSHOW,
-        "width": 640,
-        "height": 480,
-        "fps": 60,
-    },
-    {
-        "name": "MSMF 1280x720 60FPS",
-        "backend": cv2.CAP_MSMF,
-        "width": 1280,
-        "height": 720,
-        "fps": 60,
-    },
-)
+CAMERA_WIDTH = 1280
+CAMERA_HEIGHT = 720
+CAMERA_FPS = 60
+
+MODEL_WIDTH = 224
+MODEL_HEIGHT = 224
 
 
 HAND_CONNECTIONS = (
     (0, 1), (1, 2), (2, 3), (3, 4),
-
     (0, 5), (5, 6), (6, 7), (7, 8),
-
     (0, 9), (9, 10), (10, 11), (11, 12),
-
     (0, 13), (13, 14), (14, 15), (15, 16),
-
     (0, 17), (17, 18), (18, 19), (19, 20),
-
     (5, 9), (9, 13), (13, 17),
 )
 
@@ -74,235 +52,11 @@ def check_cuda(result):
     return result[1:]
 
 
-def get_fourcc_text(camera):
-    fourcc_value = int(
-        camera.get(cv2.CAP_PROP_FOURCC)
-    )
-
-    return "".join(
-        chr(
-            (fourcc_value >> (8 * index))
-            & 0xFF
-        )
-        for index in range(4)
-    )
-
-
-def create_camera(config):
-    camera = cv2.VideoCapture(
-        CAMERA_ID,
-        config["backend"],
-    )
-
-    if not camera.isOpened():
-        return None
-
-    # 可能ならMJPEGを要求
-    camera.set(
-        cv2.CAP_PROP_FOURCC,
-        cv2.VideoWriter_fourcc(*"MJPG"),
-    )
-
-    camera.set(
-        cv2.CAP_PROP_FRAME_WIDTH,
-        config["width"],
-    )
-
-    camera.set(
-        cv2.CAP_PROP_FRAME_HEIGHT,
-        config["height"],
-    )
-
-    camera.set(
-        cv2.CAP_PROP_FPS,
-        config["fps"],
-    )
-
-    return camera
-
-
-def benchmark_camera(
-    config,
-    test_frames=60,
-):
-    print()
-    print(
-        f"===== {config['name']} ====="
-    )
-
-    camera = create_camera(config)
-
-    if camera is None:
-        print("カメラを開けませんでした")
-        return None
-
-    try:
-        # 起動直後の不安定なフレームを捨てる
-        for _ in range(10):
-            camera.read()
-
-        read_times = []
-
-        for _ in range(test_frames):
-            start_time = time.perf_counter()
-
-            success, frame = camera.read()
-
-            end_time = time.perf_counter()
-
-            if not success:
-                print(
-                    "フレーム取得に失敗しました"
-                )
-                return None
-
-            read_times.append(
-                (end_time - start_time)
-                * 1000.0
-            )
-
-        average_ms = float(
-            np.mean(read_times)
-        )
-
-        minimum_ms = float(
-            np.min(read_times)
-        )
-
-        maximum_ms = float(
-            np.max(read_times)
-        )
-
-        measured_fps = (
-            1000.0 / average_ms
-            if average_ms > 0
-            else 0.0
-        )
-
-        width = camera.get(
-            cv2.CAP_PROP_FRAME_WIDTH
-        )
-
-        height = camera.get(
-            cv2.CAP_PROP_FRAME_HEIGHT
-        )
-
-        requested_fps = camera.get(
-            cv2.CAP_PROP_FPS
-        )
-
-        fourcc = get_fourcc_text(camera)
-
-        print(
-            f"Resolution : "
-            f"{width:.0f}x{height:.0f}"
-        )
-
-        print(
-            f"FPS setting: "
-            f"{requested_fps:.2f}"
-        )
-
-        print(
-            f"FOURCC     : {fourcc}"
-        )
-
-        print(
-            f"Read avg   : "
-            f"{average_ms:.2f} ms"
-        )
-
-        print(
-            f"Read min   : "
-            f"{minimum_ms:.2f} ms"
-        )
-
-        print(
-            f"Read max   : "
-            f"{maximum_ms:.2f} ms"
-        )
-
-        print(
-            f"Measured FPS: "
-            f"{measured_fps:.2f}"
-        )
-
-        return {
-            "config": config,
-            "average_ms": average_ms,
-            "measured_fps": measured_fps,
-            "fourcc": fourcc,
-        }
-
-    finally:
-        camera.release()
-
-
-def select_best_camera():
-    print(
-        "Camera benchmark starting..."
-    )
-
-    results = []
-
-    for config in CAMERA_TESTS:
-        result = benchmark_camera(
-            config
-        )
-
-        if result is not None:
-            results.append(result)
-
-    if not results:
-        raise RuntimeError(
-            "使用可能なカメラ設定がありません"
-        )
-
-    best_result = min(
-        results,
-        key=lambda result:
-        result["average_ms"],
-    )
-
-    print()
-    print("==========================")
-    print("Best camera configuration")
-    print("==========================")
-
-    print(
-        best_result["config"]["name"]
-    )
-
-    print(
-        f"Camera read: "
-        f"{best_result['average_ms']:.2f} ms"
-    )
-
-    print(
-        f"Measured FPS: "
-        f"{best_result['measured_fps']:.2f}"
-    )
-
-    print(
-        f"FOURCC: "
-        f"{best_result['fourcc']}"
-    )
-
-    print("==========================")
-    print()
-
-    return best_result["config"]
-
-
 class HandLandmarkTensorRT:
-    def __init__(
-        self,
-        engine_path: Path,
-    ):
+    def __init__(self, engine_path):
         if not engine_path.exists():
             raise FileNotFoundError(
-                f"Engineが見つかりません: "
-                f"{engine_path}"
+                f"Engineが見つかりません: {engine_path}"
             )
 
         self.logger = trt.Logger(
@@ -313,31 +67,26 @@ class HandLandmarkTensorRT:
             self.logger
         )
 
-        engine_data = (
-            engine_path.read_bytes()
-        )
+        engine_data = engine_path.read_bytes()
 
         self.engine = (
-            self.runtime
-            .deserialize_cuda_engine(
+            self.runtime.deserialize_cuda_engine(
                 engine_data
             )
         )
 
         if self.engine is None:
             raise RuntimeError(
-                "Engineの読み込みに失敗しました"
+                "TensorRT Engineの読み込みに失敗しました"
             )
 
         self.context = (
-            self.engine
-            .create_execution_context()
+            self.engine.create_execution_context()
         )
 
         if self.context is None:
             raise RuntimeError(
-                "ExecutionContextの"
-                "作成に失敗しました"
+                "ExecutionContextの作成に失敗しました"
             )
 
         self.stream = check_cuda(
@@ -357,41 +106,36 @@ class HandLandmarkTensorRT:
             self.engine.num_io_tensors
         ):
             tensor_name = (
-                self.engine
-                .get_tensor_name(
+                self.engine.get_tensor_name(
                     tensor_index
                 )
             )
 
             tensor_mode = (
-                self.engine
-                .get_tensor_mode(
+                self.engine.get_tensor_mode(
                     tensor_name
                 )
             )
 
             tensor_shape = tuple(
-                self.context
-                .get_tensor_shape(
+                self.context.get_tensor_shape(
                     tensor_name
                 )
             )
 
             tensor_dtype = trt.nptype(
-                self.engine
-                .get_tensor_dtype(
+                self.engine.get_tensor_dtype(
                     tensor_name
                 )
             )
 
             if any(
-                size < 0
-                for size in tensor_shape
+                dimension < 0
+                for dimension in tensor_shape
             ):
                 raise RuntimeError(
                     f"動的Shape未設定: "
-                    f"{tensor_name} "
-                    f"{tensor_shape}"
+                    f"{tensor_name} {tensor_shape}"
                 )
 
             host_buffer = np.empty(
@@ -414,8 +158,7 @@ class HandLandmarkTensorRT:
             ] = device_buffer
 
             success = (
-                self.context
-                .set_tensor_address(
+                self.context.set_tensor_address(
                     tensor_name,
                     int(device_buffer),
                 )
@@ -431,35 +174,26 @@ class HandLandmarkTensorRT:
                 tensor_mode
                 == trt.TensorIOMode.INPUT
             ):
-                self.input_name = (
-                    tensor_name
-                )
+                self.input_name = tensor_name
 
             else:
                 self.output_names.append(
                     tensor_name
                 )
 
-    def infer(
-        self,
-        input_data: np.ndarray,
-    ):
-        host_input = (
-            self.host_buffers[
-                self.input_name
-            ]
-        )
+    def infer(self, input_data):
+        host_input = self.host_buffers[
+            self.input_name
+        ]
 
         np.copyto(
             host_input,
             input_data,
         )
 
-        input_device = (
-            self.device_buffers[
-                self.input_name
-            ]
-        )
+        input_device = self.device_buffers[
+            self.input_name
+        ]
 
         check_cuda(
             cudart.cudaMemcpyAsync(
@@ -473,8 +207,7 @@ class HandLandmarkTensorRT:
         )
 
         success = (
-            self.context
-            .execute_async_v3(
+            self.context.execute_async_v3(
                 stream_handle=int(
                     self.stream
                 )
@@ -486,20 +219,14 @@ class HandLandmarkTensorRT:
                 "TensorRT推論に失敗しました"
             )
 
-        for output_name in (
-            self.output_names
-        ):
-            host_output = (
-                self.host_buffers[
-                    output_name
-                ]
-            )
+        for output_name in self.output_names:
+            host_output = self.host_buffers[
+                output_name
+            ]
 
-            device_output = (
-                self.device_buffers[
-                    output_name
-                ]
-            )
+            device_output = self.device_buffers[
+                output_name
+            ]
 
             check_cuda(
                 cudart.cudaMemcpyAsync(
@@ -549,6 +276,35 @@ class HandLandmarkTensorRT:
             self.stream = None
 
 
+def create_camera():
+    camera = cv2.VideoCapture(
+        CAMERA_ID,
+        cv2.CAP_MSMF,
+    )
+
+    if not camera.isOpened():
+        raise RuntimeError(
+            "カメラを開けませんでした"
+        )
+
+    camera.set(
+        cv2.CAP_PROP_FRAME_WIDTH,
+        CAMERA_WIDTH,
+    )
+
+    camera.set(
+        cv2.CAP_PROP_FRAME_HEIGHT,
+        CAMERA_HEIGHT,
+    )
+
+    camera.set(
+        cv2.CAP_PROP_FPS,
+        CAMERA_FPS,
+    )
+
+    return camera
+
+
 def crop_center_square(frame):
     height, width = frame.shape[:2]
 
@@ -581,7 +337,10 @@ def crop_center_square(frame):
 def preprocess_image(crop):
     resized = cv2.resize(
         crop,
-        (224, 224),
+        (
+            MODEL_WIDTH,
+            MODEL_HEIGHT,
+        ),
         interpolation=cv2.INTER_LINEAR,
     )
 
@@ -612,6 +371,11 @@ def preprocess_image(crop):
 
 
 def get_landmarks(outputs):
+    if "Identity" not in outputs:
+        raise KeyError(
+            "Identity出力が見つかりません"
+        )
+
     return outputs[
         "Identity"
     ].reshape(
@@ -637,15 +401,19 @@ def draw_landmarks(
     for landmark in landmarks:
         x = int(
             left
-            + landmark[0]
-            / 224.0
+            + (
+                float(landmark[0])
+                / MODEL_WIDTH
+            )
             * crop_width
         )
 
         y = int(
             top
-            + landmark[1]
-            / 224.0
+            + (
+                float(landmark[1])
+                / MODEL_HEIGHT
+            )
             * crop_height
         )
 
@@ -679,8 +447,8 @@ def draw_landmarks(
             frame,
             str(index),
             (
-                point[0] + 4,
-                point[1] - 4,
+                point[0] + 5,
+                point[1] - 5,
             ),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.35,
@@ -690,78 +458,95 @@ def draw_landmarks(
         )
 
 
-def draw_performance(
+def draw_information(
     frame,
-    fps,
+    pipeline_fps,
     camera_ms,
     preprocess_ms,
     inference_ms,
+    postprocess_ms,
     draw_ms,
     total_ms,
+    presence_value,
+    handedness_value,
 ):
-    lines = (
-        (
-            f"FPS      : {fps:.1f}",
-            (0, 255, 0),
-        ),
-        (
-            f"Camera   : {camera_ms:.2f} ms",
-            (255, 255, 255),
-        ),
-        (
-            f"Pre      : {preprocess_ms:.2f} ms",
-            (255, 255, 255),
-        ),
-        (
-            f"TensorRT : {inference_ms:.2f} ms",
-            (255, 255, 255),
-        ),
-        (
-            f"Draw     : {draw_ms:.2f} ms",
-            (255, 255, 255),
-        ),
-        (
-            f"Total    : {total_ms:.2f} ms",
-            (0, 255, 255),
-        ),
+    information = (
+        f"Pipeline FPS : {pipeline_fps:.1f}",
+        f"Camera       : {camera_ms:.2f} ms",
+        f"Preprocess   : {preprocess_ms:.2f} ms",
+        f"TensorRT     : {inference_ms:.2f} ms",
+        f"Postprocess  : {postprocess_ms:.2f} ms",
+        f"Draw         : {draw_ms:.2f} ms",
+        f"Total        : {total_ms:.2f} ms",
+        "",
+        f"Camera       : MSMF",
+        f"Resolution   : {CAMERA_WIDTH}x{CAMERA_HEIGHT}",
+        f"Requested FPS: {CAMERA_FPS}",
+        f"Model Input  : {MODEL_WIDTH}x{MODEL_HEIGHT}",
+        f"Engine       : FP32",
+        f"Presence     : {presence_value:.4f}",
+        f"Identity_2   : {handedness_value:.4f}",
+        f"Landmarks    : 21",
     )
 
-    y = 35
+    y = 30
 
-    for text, color in lines:
+    for text in information:
+        if text == "":
+            y += 10
+            continue
+
         cv2.putText(
             frame,
             text,
             (20, y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.65,
-            color,
-            2,
+            0.55,
+            (255, 255, 255),
+            1,
             cv2.LINE_AA,
         )
 
-        y += 30
+        y += 24
 
 
-def run_realtime(
-    camera_config,
-):
+def main():
+    print("PipeTRT realtime test")
+    print()
+
+    print(
+        f"Engine: {ENGINE_PATH}"
+    )
+
     hand_model = (
         HandLandmarkTensorRT(
             ENGINE_PATH
         )
     )
 
-    camera = create_camera(
-        camera_config
+    camera = create_camera()
+
+    print(
+        "Camera backend: MSMF"
     )
 
-    if camera is None:
-        hand_model.close()
+    print(
+        "Resolution:",
+        camera.get(
+            cv2.CAP_PROP_FRAME_WIDTH
+        ),
+        "x",
+        camera.get(
+            cv2.CAP_PROP_FRAME_HEIGHT
+        ),
+    )
 
-        raise RuntimeError(
-            "カメラを開けませんでした"
-        )
+    print(
+        "FPS:",
+        camera.get(
+            cv2.CAP_PROP_FPS
+        ),
+    )
 
     smoothed_fps = 0.0
 
@@ -780,6 +565,9 @@ def run_realtime(
             )
 
             if not success:
+                print(
+                    "カメラフレーム取得失敗"
+                )
                 break
 
             frame = cv2.flip(
@@ -821,14 +609,46 @@ def run_realtime(
                 time.perf_counter()
             )
 
+            postprocess_start = (
+                time.perf_counter()
+            )
+
+            landmarks = get_landmarks(
+                outputs
+            )
+
+            presence_value = float(
+                outputs.get(
+                    "Identity_1",
+                    np.array([[0.0]]),
+                ).flatten()[0]
+            )
+
+            handedness_value = float(
+                outputs.get(
+                    "Identity_2",
+                    np.array([[0.0]]),
+                ).flatten()[0]
+            )
+
+            postprocess_end = (
+                time.perf_counter()
+            )
+
             draw_start = (
                 time.perf_counter()
             )
 
-            landmarks = (
-                get_landmarks(
-                    outputs
-                )
+            left, top, right, bottom = (
+                crop_rectangle
+            )
+
+            cv2.rectangle(
+                frame,
+                (left, top),
+                (right, bottom),
+                (255, 255, 0),
+                2,
             )
 
             draw_landmarks(
@@ -844,27 +664,32 @@ def run_realtime(
             camera_ms = (
                 camera_end
                 - frame_start
-            ) * 1000
+            ) * 1000.0
 
             preprocess_ms = (
                 preprocess_end
                 - preprocess_start
-            ) * 1000
+            ) * 1000.0
 
             inference_ms = (
                 inference_end
                 - inference_start
-            ) * 1000
+            ) * 1000.0
+
+            postprocess_ms = (
+                postprocess_end
+                - postprocess_start
+            ) * 1000.0
 
             draw_ms = (
                 draw_end
                 - draw_start
-            ) * 1000
+            ) * 1000.0
 
             total_ms = (
                 draw_end
                 - frame_start
-            ) * 1000
+            ) * 1000.0
 
             current_fps = (
                 1000.0 / total_ms
@@ -872,28 +697,49 @@ def run_realtime(
                 else 0.0
             )
 
-            if smoothed_fps == 0:
+            if smoothed_fps == 0.0:
                 smoothed_fps = (
                     current_fps
                 )
+
             else:
                 smoothed_fps = (
                     smoothed_fps * 0.9
                     + current_fps * 0.1
                 )
 
-            draw_performance(
+            draw_information(
                 frame,
                 smoothed_fps,
                 camera_ms,
                 preprocess_ms,
                 inference_ms,
+                postprocess_ms,
                 draw_ms,
                 total_ms,
+                presence_value,
+                handedness_value,
+            )
+
+            cv2.putText(
+                frame,
+                "Put one hand inside this square",
+                (
+                    left,
+                    max(
+                        25,
+                        top - 10,
+                    ),
+                ),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.65,
+                (255, 255, 0),
+                2,
+                cv2.LINE_AA,
             )
 
             cv2.imshow(
-                "PipeTRT Hand Landmark",
+                "PipeTRT Realtime TensorRT Test",
                 frame,
             )
 
@@ -910,20 +756,8 @@ def run_realtime(
 
     finally:
         camera.release()
-
         cv2.destroyAllWindows()
-
         hand_model.close()
-
-
-def main():
-    best_camera_config = (
-        select_best_camera()
-    )
-
-    run_realtime(
-        best_camera_config
-    )
 
 
 if __name__ == "__main__":
