@@ -1,29 +1,53 @@
 import cv2
-import numpy as np
 
 from pipetrt.palm.preprocess import preprocess
 from pipetrt.palm.detector import detect
+from pipetrt.palm.decoder import decode
+from pipetrt.palm.anchors import generate_anchors
 
 
-frame = cv2.imread("example/data/hand.jpg")
+frame = cv2.imread(
+    "example/data/hand.jpg"
+)
 
 if frame is None:
-    raise FileNotFoundError("画像を読み込めませんでした")
+    raise FileNotFoundError(
+        "画像を読み込めませんでした"
+    )
 
 palm_input = preprocess(frame)
 
 boxes, scores = detect(palm_input)
 
-best_index = scores.argmax()
+anchors = generate_anchors()
 
-raw_score = scores.reshape(-1)[best_index]
+results = decode(
+    boxes,
+    scores,
+    anchors
+)
 
-probability = 1.0 / (1.0 + np.exp(-raw_score))
+print(
+    "Detection Count:",
+    len(results)
+)
 
-print("Best Anchor :", best_index)
-print("Raw Score   :", raw_score)
-print("Probability :", probability)
+for index, result in enumerate(results):
 
-print()
-print("Box Data")
-print(boxes.reshape(-1, 18)[best_index])
+    print()
+    print(f"=== Palm {index} ===")
+
+    print(
+        "Score:",
+        result["score"]
+    )
+
+    print(
+        "BBox:",
+        result["bbox"]
+    )
+
+    print("Keypoints:")
+    print(
+        result["keypoints"]
+    )

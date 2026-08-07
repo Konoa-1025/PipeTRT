@@ -1,5 +1,6 @@
 import onnxruntime as ort
 
+
 session = ort.InferenceSession(
     "models/palm_detection.onnx",
     providers=["CPUExecutionProvider"]
