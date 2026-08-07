@@ -39,14 +39,14 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - モデルの出力shapeを確認する
   - 入出力データの型を確認する
 
-- [ ] **フェーズ2：画像前処理**
+- [x] **フェーズ2：画像前処理**
   - 入力画像をモデル入力サイズへリサイズする
   - 色形式を変換する
   - モデルが要求する値の範囲へ変換する
   - Tensor形式へ変換する
   - 前処理後のshapeを確認する
 
-- [ ] **フェーズ3：ONNX RuntimeでPalm推論**
+- [x] **フェーズ3：ONNX RuntimeでPalm推論**
   - ONNX Runtimeでモデルを読み込む
   - 前処理した画像を入力する
   - Palm Detectionを実行する
@@ -54,12 +54,14 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - Raw Outputのshapeと内容を確認する
 
 - [ ] **フェーズ4：Palm Decoder**
-  - Raw Outputの構造を理解する
-  - 検出スコアをデコードする
-  - Bounding Boxをデコードする
-  - KeyPointをデコードする
-  - 必要な後処理を実装する
-  - 扱いやすいPalm Detection Resultとして返す
+  - [ ] 2016個のAnchorの生成方法を調査する
+  - [ ] Anchor Generatorを実装する
+  - [ ] Anchor GeneratorがMediaPipeと一致するか確認する
+  - [ ] 18個の出力データの意味を調査する
+  - [ ] Bounding Boxを復元する
+  - [ ] Palm KeyPointを復元する
+  - [ ] Bounding Boxを描画する
+  - [ ] Palm KeyPointを描画する
 
 - [ ] **フェーズ5：検出結果の確認**
   - Bounding Boxを元画像へ描画する
