@@ -53,7 +53,7 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - Raw Outputを取得する
   - Raw Outputのshapeと内容を確認する
 
-- [ ] **フェーズ4：Palm Decoder**
+- [x] **フェーズ4：Palm Decoder**
   - [ ] 2016個のAnchorの生成方法を調査する
   - [ ] Anchor Generatorを実装する
   - [ ] Anchor GeneratorがMediaPipeと一致するか確認する
@@ -63,7 +63,7 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - [ ] Bounding Boxを描画する
   - [ ] Palm KeyPointを描画する
 
-- [ ] **フェーズ5：検出結果の確認**
+- [x] **フェーズ5：検出結果の確認**
   - Bounding Boxを元画像へ描画する
   - KeyPointを元画像へ描画する
   - 検出信頼度を表示する
