@@ -70,7 +70,7 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - 静止画で検出を確認する
   - カメラ映像でリアルタイム検出を確認する
 
-- [ ] **フェーズ6：TensorRT Engine**
+- [x] **フェーズ6：TensorRT Engine**
   - Palm Detection ONNXからEngineを生成する
   - Engineをファイルへ保存する
   - Engineを読み込む
@@ -79,11 +79,13 @@ Palm Detectionは、Hand Landmarkモデルへ渡す「手の領域」を見つ�
   - ONNX Runtime版と検出結果を比較する
   - 推論速度を比較する
 
-- [ ] **フェーズ7：Palm Detection完成**
+- [x] **フェーズ7：Palm Detection完成**
   - Palm処理を整理する
   - 推論処理とDecoderを分離する
   - example用プログラムを整理する
   - ROIから利用できる形式で検出結果を返せるようにする
   - `dev`ブランチへ統合できる状態にする
+
+- [x] **フェーズ8：devへのマージ**
 
 ---
