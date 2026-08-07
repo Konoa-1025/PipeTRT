@@ -13,4 +13,7 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 - フェーズ0:調査と開発目標の作成
 
 ## 現在の進捗
-- [ ] フェーズ0
+- [ ] 軸に平行なROIの作成
+- [ ] ROIをLandmarkへ入力
+- [ ] 回転ROI
+- [ ] ROIをLandmarkへ入力
