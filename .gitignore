@@ -3,6 +3,8 @@ models/*.onnx
 models/*.engine
 models/*.plan
 
+.vscode/
+
 *.jpg
 
 # Byte-compiled / optimized / DLL files
