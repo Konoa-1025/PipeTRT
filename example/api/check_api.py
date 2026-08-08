@@ -9,5 +9,8 @@ landmarker = pipetrt.HandLandmarker()
 result = landmarker.detect(frame)
 
 print(result.palm_result)
+print(result.roi)
+
+print(result.palm_result)
 
 landmarker.close()
