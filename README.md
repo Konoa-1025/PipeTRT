@@ -1,4 +1,4 @@
-# PipeTRT
+# pipeTRT
 MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 
 ## dev branch
