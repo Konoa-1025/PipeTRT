@@ -4,6 +4,8 @@ from pipetrt.palm.detector import detect
 from pipetrt.palm.decoder import decode
 from pipetrt.palm.anchors import generate_anchors
 
+from pipetrt.roi.roi import create_axis_aligned_roi
+
 from .hand_landmarker_result import HandLandmarkerResult
 
 
@@ -22,8 +24,19 @@ class HandLandmarker:
             self.anchors
         )
 
+        if not palm_results:
+            return HandLandmarkerResult(
+                palm_result=[],
+                roi=None
+            )
+
+        roi = create_axis_aligned_roi(
+            palm_results[0]
+        )
+
         return HandLandmarkerResult(
-            palm_result=palm_results
+            palm_result=palm_results,
+            roi=roi
         )
 
     def close(self):
