@@ -14,53 +14,38 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 
 ## 理論
 
-入力｜Palm Detection のデコード結果 -> roi.py
+入力
+bbox = [x_min, y_min, x_max, y_max]
+keypoints = [...]
 
-{
-    "score": 0.97,
-    "center_x": ...,
-    "center_y": ...,
-    "width": ...,
-    "height": ...,
-    "keypoints": [...]
-}
+        ↓
 
-出力｜軸平行ROI
+1. 中心座標
+center_x = (x_min + x_max) / 2
+center_y = (y_min + y_max) / 2
 
-{
-    "center_x": ...,
-    "center_y": ...,
-    "width": ...,
-    "height": ...
-}
+        ↓
 
+2. bboxサイズ
+width  = x_max - x_min
+height = y_max - y_min
 
-入力｜軸平行ROI + 元画像 -> crop.py
+        ↓
 
-出力｜Landmark入力用ROI画像
+3. ROIサイズ決定
+roi_size = max(width, height)
 
+        ↓
 
-入力｜Palm Detection のデコード結果 -> rotation.py
+4. 正方形ROI
+roi_x_min
+roi_y_min
+roi_x_max
+roi_y_max
 
-出力｜回転情報付きROI
+        ↓
 
-{
-    "center_x": ...,
-    "center_y": ...,
-    "width": ...,
-    "height": ...,
-    "rotation": ...
-}
-
-
-入力｜回転ROI + 元画像 -> crop.py
-
-出力｜回転・切り抜き済みLandmark入力画像
-
-
-入力｜Landmark入力画像 -> Hand Landmark Model
-
-出力｜21点ランドマーク
+5. 元画像に描画
 
 ## 開発ロードマップ
 
