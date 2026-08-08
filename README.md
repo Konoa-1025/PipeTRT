@@ -32,7 +32,7 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
   - `close()` の基本処理を作成する
   - 最小構成で動作確認する
 
-- [ ] フェーズ2: Palm DetectionをAPIへ接続
+- [x] フェーズ2: Palm DetectionをAPIへ接続
   - 入力画像をPalm Detectionへ渡す
   - Palm Decoderまで実行する
   - Palm Detection結果を取得する
