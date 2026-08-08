@@ -26,8 +26,10 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 - [ ] フェーズ1: APIの基本構造を作成
   - `PipeTRT` パッケージの入口を作成する
   - `__init__.py` から公開APIを呼び出せるようにする
-  - `Hands` クラスを作成する
-  - `process(frame)` の基本処理を作成する
+  - `HandLandmarker` クラスを作成する
+  - `HandLandmarkerResult` を作成する
+  - `detect(frame)` の基本処理を作成する
+  - `close()` の基本処理を作成する
   - 最小構成で動作確認する
 
 - [ ] フェーズ2: Palm DetectionをAPIへ接続
