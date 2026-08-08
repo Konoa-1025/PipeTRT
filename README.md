@@ -9,9 +9,62 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 問題があればmainか、修正したほうがいい場所が分かってる場合はそのブランチ内のissueを切ってください！
 区切りがついたら修正します。
 
+## roi
+手のひらからAIが解析できるように四角の手の範囲を切り出す。
+
+## 理論
+
+入力｜Palm Detection のデコード結果 -> roi.py
+
+{
+    "score": 0.97,
+    "center_x": ...,
+    "center_y": ...,
+    "width": ...,
+    "height": ...,
+    "keypoints": [...]
+}
+
+出力｜軸平行ROI
+
+{
+    "center_x": ...,
+    "center_y": ...,
+    "width": ...,
+    "height": ...
+}
+
+
+入力｜軸平行ROI + 元画像 -> crop.py
+
+出力｜Landmark入力用ROI画像
+
+
+入力｜Palm Detection のデコード結果 -> rotation.py
+
+出力｜回転情報付きROI
+
+{
+    "center_x": ...,
+    "center_y": ...,
+    "width": ...,
+    "height": ...,
+    "rotation": ...
+}
+
+
+入力｜回転ROI + 元画像 -> crop.py
+
+出力｜回転・切り抜き済みLandmark入力画像
+
+
+入力｜Landmark入力画像 -> Hand Landmark Model
+
+出力｜21点ランドマーク
+
 ## 開発ロードマップ
 
-- [ ] フェーズ0: ROI処理の調査と開発目標の作成
+- [x] フェーズ0: ROI処理の調査と開発目標の作成
   - MediaPipe HandsにおけるROI処理の役割を理解する
   - Palm DetectionからROI生成までの流れを調査する
   - ROIに必要な入力・出力を整理する
