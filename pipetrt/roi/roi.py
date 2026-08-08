@@ -1,4 +1,4 @@
-def create_axis_aligned_roi(palm_result, scale=1.5):
+def create_axis_aligned_roi(palm_result, scale=2.0):
     x_min, y_min, x_max, y_max = palm_result["bbox"]
 
     center_x = (x_min + x_max) / 2
