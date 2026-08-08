@@ -1,7 +1,6 @@
-import pipetrt
-
 import cv2
 import pipetrt
+
 
 frame = cv2.imread("example/data/hand.jpg")
 
