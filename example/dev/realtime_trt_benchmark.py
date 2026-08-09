@@ -36,32 +36,82 @@ print(
 
 print("Camera initialization start")
 
+# カメラ初期化全体の計測開始
 camera_init_start = time.perf_counter()
+
+
+# VideoCapture
+start = time.perf_counter()
 
 cap = cv2.VideoCapture(
     0,
     cv2.CAP_MSMF
 )
 
+print(
+    f"VideoCapture : "
+    f"{time.perf_counter() - start:.2f} sec"
+)
+
+
+# Width
+start = time.perf_counter()
+
 cap.set(
     cv2.CAP_PROP_FRAME_WIDTH,
     1280
 )
+
+print(
+    f"Set Width    : "
+    f"{time.perf_counter() - start:.2f} sec"
+)
+
+
+# Height
+start = time.perf_counter()
 
 cap.set(
     cv2.CAP_PROP_FRAME_HEIGHT,
     720
 )
 
+print(
+    f"Set Height   : "
+    f"{time.perf_counter() - start:.2f} sec"
+)
+
+
+# FPS
+start = time.perf_counter()
+
 cap.set(
     cv2.CAP_PROP_FPS,
     60
 )
 
+print(
+    f"Set FPS      : "
+    f"{time.perf_counter() - start:.2f} sec"
+)
+
+
+# First Read
+start = time.perf_counter()
+
+ret, test_frame = cap.read()
+
+print(
+    f"First Read   : "
+    f"{time.perf_counter() - start:.2f} sec"
+)
+
+
+# カメラ初期化全体の計測終了
 camera_init_end = time.perf_counter()
 
 print(
-    f"Camera initialization: "
+    f"Camera Total : "
     f"{camera_init_end - camera_init_start:.2f} sec"
 )
 
@@ -347,6 +397,7 @@ while True:
         )
 
         text_y += 30
+
 
     # -----------------------------
     # Windows
