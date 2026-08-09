@@ -1,5 +1,3 @@
-# pipetrt/api/hand_landmarker_result.py
-
 class HandLandmarkerResult:
     def __init__(
         self,
