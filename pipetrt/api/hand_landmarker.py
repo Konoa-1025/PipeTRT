@@ -6,9 +6,9 @@ from pipetrt.palm.anchors import generate_anchors
 from pipetrt.roi.roi import create_roi
 from pipetrt.roi.transform import extract_roi
 
-from pipetrt.onnx_inference import ONNXInference
+from pipetrt.landmark.onnx_inference import ONNXInference
 
-from .hand_landmarker_result import HandLandmarkerResult
+from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
 
 class HandLandmarker:
