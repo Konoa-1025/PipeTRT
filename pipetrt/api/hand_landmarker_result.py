@@ -5,7 +5,8 @@ class HandLandmarkerResult:
         self,
         hand_landmarks=None,
         palm_result=None,
-        roi=None
+        roi=None,
+        roi_image=None
     ):
         self.hand_landmarks = (
             hand_landmarks
@@ -15,3 +16,4 @@ class HandLandmarkerResult:
 
         self.palm_result = palm_result
         self.roi = roi
+        self.roi_image = roi_image
