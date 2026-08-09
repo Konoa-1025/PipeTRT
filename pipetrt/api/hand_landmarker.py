@@ -17,10 +17,44 @@ from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
 class HandLandmarker:
     def __init__(self):
+        import time
+
+        total_start = time.perf_counter()
+
+        # Anchors
+        start = time.perf_counter()
+
         self.anchors = generate_anchors()
 
+        print(
+            f"Anchor init: "
+            f"{time.perf_counter() - start:.2f} sec"
+        )
+
+        # Palm TensorRT
+        start = time.perf_counter()
+
         self.palm_model = PalmTensorRTInference()
+
+        print(
+            f"Palm TRT init: "
+            f"{time.perf_counter() - start:.2f} sec"
+        )
+
+        # Landmark TensorRT
+        start = time.perf_counter()
+
         self.landmark_model = TensorRTInference()
+
+        print(
+            f"Landmark TRT init: "
+            f"{time.perf_counter() - start:.2f} sec"
+        )
+
+        print(
+            f"HandLandmarker total init: "
+            f"{time.perf_counter() - total_start:.2f} sec"
+        )
 
     def detect(self, frame):
         total_start = time.perf_counter()
