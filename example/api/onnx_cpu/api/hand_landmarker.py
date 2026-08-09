@@ -9,7 +9,7 @@ from pipetrt.roi.transform import (
     restore_landmarks_to_image
 )
 
-from pipetrt.landmark.onnx_inference import ONNXInference
+from example.landmark.onnx_cpu.onnx_inference import ONNXInference
 
 
 from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
