@@ -110,13 +110,58 @@ class HandLandmarker:
             # 次フレーム用Tracking ROI更新
             # -----------------------------
 
-            self.tracking_roi = (
-                create_tracking_roi(
-                    image_landmarks,
-                    image_width,
-                    image_height
-                )
+            new_tracking_roi = create_tracking_roi(
+                image_landmarks,
+                image_width,
+                image_height
             )
+
+            # Tracking ROI生成失敗
+            if new_tracking_roi is None:
+                self.tracking = False
+                self.tracking_roi = None
+
+            else:
+                # -----------------------------
+                # ROI急縮小チェック
+                # -----------------------------
+
+                old_area = (
+                    self.tracking_roi["width"]
+                    * self.tracking_roi["height"]
+                )
+
+                new_area = (
+                    new_tracking_roi["width"]
+                    * new_tracking_roi["height"]
+                )
+
+                if old_area > 0:
+                    area_ratio = (
+                        new_area / old_area
+                    )
+                else:
+                    area_ratio = 0.0
+
+                print(
+                    f"Tracking ROI area ratio: "
+                    f"{area_ratio:.3f}"
+                )
+
+                # 前フレームの50%未満まで
+                # 一気に縮んだらTracking失敗
+                if area_ratio < 0.5:
+                    print(
+                        "Tracking lost: "
+                        "ROI shrunk too quickly"
+                    )
+
+                    self.tracking = False
+                    self.tracking_roi = None
+
+                else:
+                    # 正常なら次フレーム用ROIとして採用
+                    self.tracking_roi = new_tracking_roi
 
             # ROI生成失敗
             if self.tracking_roi is None:
