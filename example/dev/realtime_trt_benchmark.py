@@ -232,13 +232,21 @@ while True:
     # Performance Draw
     # -----------------------------
 
+    timings = result.timings
+
     performance_lines = [
-        f"FPS        : {smoothed_fps:.1f}",
-        f"Camera     : {camera_ms:.2f} ms",
-        f"PipeTRT    : {detect_ms:.2f} ms",
-        f"Draw       : {draw_ms:.2f} ms",
-        f"Total      : {total_ms:.2f} ms",
-    ]
+    f"FPS          : {smoothed_fps:.1f}",
+    f"Camera       : {camera_ms:.2f} ms",
+    f"Palm TRT     : {timings.get('palm_trt_ms', 0.0):.2f} ms",
+    f"Palm Decode  : {timings.get('palm_decode_ms', 0.0):.2f} ms",
+    f"ROI          : {timings.get('roi_ms', 0.0):.2f} ms",
+    f"ROI Transform: {timings.get('roi_transform_ms', 0.0):.2f} ms",
+    f"Landmark TRT : {timings.get('landmark_trt_ms', 0.0):.2f} ms",
+    f"Restore      : {timings.get('restore_ms', 0.0):.2f} ms",
+    f"PipeTRT Total: {timings.get('total_ms', 0.0):.2f} ms",
+    f"Draw         : {draw_ms:.2f} ms",
+    f"Frame Total  : {total_ms:.2f} ms",
+]
 
     text_y = 30
 
