@@ -80,7 +80,7 @@ def extract_roi(
         frame,
         transform,
         (output_size, output_size),
-        borderMode=cv2.BORDER_CONSTANT
+        borderMode=cv2.BORDER_REPLICATE
     )
 
     return roi_image, transform
