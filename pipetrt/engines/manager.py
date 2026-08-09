@@ -60,18 +60,12 @@ class EngineManager:
 
     def get_palm_onnx_path(self):
         return Path(
-            "pipetrt"
-        ) / "models" / (
-            f"palm_detection_"
-            f"{self.model}.onnx"
+            "models/palm_detection.onnx"
         )
 
     def get_landmark_onnx_path(self):
         return Path(
-            "pipetrt"
-        ) / "models" / (
-            f"hand_landmark_"
-            f"{self.model}.onnx"
+            "models/hand_landmark.onnx"
         )
 
     def ensure_engines(self):
