@@ -70,9 +70,6 @@ class HandLandmarker:
             )
 
             landmark_end = time.perf_counter()
-            # -----------------------------
-            # Hand Presence確認
-            # -----------------------------
 
             hand_presence = float(
                 landmark_outputs["Identity_1"][0][0]
@@ -184,19 +181,9 @@ class HandLandmarker:
                 else:
                     area_ratio = 0.0
 
-                print(
-                    f"Tracking ROI area ratio: "
-                    f"{area_ratio:.3f}"
-                )
-
                 # 前フレームの50%未満まで
                 # 一気に縮んだらTracking失敗
                 if area_ratio < 0.5:
-                    print(
-                        "Tracking lost: "
-                        "ROI shrunk too quickly"
-                    )
-
                     self.tracking = False
                     self.tracking_roi = None
 
