@@ -223,11 +223,6 @@ class HandLandmarker:
                 (total_end - total_start) * 1000.0,
         }
 
-        print(
-            f"HandLandmarker total init: "
-            f"{time.perf_counter() - total_start:.2f} sec"
-        )
-
         # -----------------------------
         # Tracking State
         # -----------------------------
