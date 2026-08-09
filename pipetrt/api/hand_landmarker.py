@@ -19,47 +19,140 @@ from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
 class HandLandmarker:
     def __init__(self):
-        import time
-
-        total_start = time.perf_counter()
-
-        # Anchors
-        start = time.perf_counter()
-
         self.anchors = generate_anchors()
 
-        print(
-            f"Anchor init: "
-            f"{time.perf_counter() - start:.2f} sec"
-        )
-
-        # Palm TensorRT
-        start = time.perf_counter()
-
         self.palm_model = PalmTensorRTInference()
-
-        print(
-            f"Palm TRT init: "
-            f"{time.perf_counter() - start:.2f} sec"
-        )
-
-        # Landmark TensorRT
-        start = time.perf_counter()
-
         self.landmark_model = TensorRTInference()
 
-        print(
-            f"Landmark TRT init: "
-            f"{time.perf_counter() - start:.2f} sec"
-        )
-
-        print(
-            f"HandLandmarker total init: "
-            f"{time.perf_counter() - total_start:.2f} sec"
-        )
+        # Tracking状態
+        self.tracking = False
+        self.tracking_roi = None
 
     def detect(self, frame):
         total_start = time.perf_counter()
+
+        image_height, image_width = frame.shape[:2]
+
+        # =====================================
+        # TRACKING MODE
+        # =====================================
+
+        if (
+            self.tracking
+            and self.tracking_roi is not None
+        ):
+            roi = self.tracking_roi
+
+            # -----------------------------
+            # ROI Transform
+            # -----------------------------
+
+            transform_start = time.perf_counter()
+
+            roi_image, transform = extract_roi(
+                frame,
+                roi,
+                output_size=224
+            )
+
+            transform_end = time.perf_counter()
+
+            # -----------------------------
+            # Landmark TensorRT
+            # -----------------------------
+
+            landmark_start = time.perf_counter()
+
+            landmark_outputs = (
+                self.landmark_model.infer_frame(
+                    roi_image
+                )
+            )
+
+            landmark_end = time.perf_counter()
+
+            roi_landmarks = (
+                landmark_outputs["Identity"]
+                .reshape(
+                    21,
+                    3
+                )
+            )
+
+            # -----------------------------
+            # ROI座標 → 元画像座標
+            # -----------------------------
+
+            restore_start = time.perf_counter()
+
+            image_landmarks = (
+                restore_landmarks_to_image(
+                    roi_landmarks,
+                    transform
+                )
+            )
+
+            restore_end = time.perf_counter()
+
+            # -----------------------------
+            # 次フレーム用Tracking ROI更新
+            # -----------------------------
+
+            self.tracking_roi = (
+                create_tracking_roi(
+                    image_landmarks,
+                    image_width,
+                    image_height
+                )
+            )
+
+            # ROI生成失敗
+            if self.tracking_roi is None:
+                self.tracking = False
+
+            total_end = time.perf_counter()
+
+            return HandLandmarkerResult(
+                palm_result=[],
+                roi=roi,
+                roi_image=roi_image,
+                hand_landmarks=image_landmarks,
+                timings={
+                    "mode": "TRACKING",
+
+                    "palm_trt_ms": 0.0,
+                    "palm_decode_ms": 0.0,
+                    "roi_ms": 0.0,
+
+                    "roi_transform_ms":
+                        (
+                            transform_end
+                            - transform_start
+                        ) * 1000.0,
+
+                    "landmark_trt_ms":
+                        (
+                            landmark_end
+                            - landmark_start
+                        ) * 1000.0,
+
+                    "restore_ms":
+                        (
+                            restore_end
+                            - restore_start
+                        ) * 1000.0,
+
+                    "total_ms":
+                        (
+                            total_end
+                            - total_start
+                        ) * 1000.0,
+                }
+            )
+
+        # =====================================
+        # DETECTION MODE
+        # =====================================
 
         # -----------------------------
         # Palm TensorRT
@@ -67,8 +160,10 @@ class HandLandmarker:
 
         palm_start = time.perf_counter()
 
-        palm_outputs = self.palm_model.infer_frame(
-            frame
+        palm_outputs = (
+            self.palm_model.infer_frame(
+                frame
+            )
         )
 
         palm_end = time.perf_counter()
@@ -90,6 +185,10 @@ class HandLandmarker:
 
         decode_end = time.perf_counter()
 
+        # -----------------------------
+        # Palmが見つからない
+        # -----------------------------
+
         if not palm_results:
             self.tracking = False
             self.tracking_roi = None
@@ -102,11 +201,19 @@ class HandLandmarker:
                 roi_image=None,
                 hand_landmarks=[],
                 timings={
+                    "mode": "DETECTION",
+
                     "palm_trt_ms":
-                        (palm_end - palm_start) * 1000.0,
+                        (
+                            palm_end
+                            - palm_start
+                        ) * 1000.0,
 
                     "palm_decode_ms":
-                        (decode_end - decode_start) * 1000.0,
+                        (
+                            decode_end
+                            - decode_start
+                        ) * 1000.0,
 
                     "roi_ms": 0.0,
                     "roi_transform_ms": 0.0,
@@ -114,17 +221,18 @@ class HandLandmarker:
                     "restore_ms": 0.0,
 
                     "total_ms":
-                        (total_end - total_start) * 1000.0,
+                        (
+                            total_end
+                            - total_start
+                        ) * 1000.0,
                 }
             )
 
         # -----------------------------
-        # ROI生成
+        # Palm → ROI
         # -----------------------------
 
         roi_start = time.perf_counter()
-
-        image_height, image_width = frame.shape[:2]
 
         roi = create_roi(
             palm_results[0],
@@ -171,7 +279,7 @@ class HandLandmarker:
         )
 
         # -----------------------------
-        # Restore
+        # ROI座標 → 元画像座標
         # -----------------------------
 
         restore_start = time.perf_counter()
@@ -186,13 +294,15 @@ class HandLandmarker:
         restore_end = time.perf_counter()
 
         # -----------------------------
-        # Tracking ROI
+        # Tracking開始
         # -----------------------------
 
-        self.tracking_roi = create_tracking_roi(
-            image_landmarks,
-            image_width,
-            image_height
+        self.tracking_roi = (
+            create_tracking_roi(
+                image_landmarks,
+                image_width,
+                image_height
+            )
         )
 
         if self.tracking_roi is not None:
@@ -200,45 +310,57 @@ class HandLandmarker:
 
         total_end = time.perf_counter()
 
-        timings = {
-            "palm_trt_ms":
-                (palm_end - palm_start) * 1000.0,
-
-            "palm_decode_ms":
-                (decode_end - decode_start) * 1000.0,
-
-            "roi_ms":
-                (roi_end - roi_start) * 1000.0,
-
-            "roi_transform_ms":
-                (transform_end - transform_start) * 1000.0,
-
-            "landmark_trt_ms":
-                (landmark_end - landmark_start) * 1000.0,
-
-            "restore_ms":
-                (restore_end - restore_start) * 1000.0,
-
-            "total_ms":
-                (total_end - total_start) * 1000.0,
-        }
-
-        # -----------------------------
-        # Tracking State
-        # -----------------------------
-
-        self.tracking = False
-        self.tracking_roi = None
-
         return HandLandmarkerResult(
             palm_result=palm_results,
             roi=roi,
             roi_image=roi_image,
             hand_landmarks=image_landmarks,
-            timings=timings
+            timings={
+                "mode": "DETECTION",
+
+                "palm_trt_ms":
+                    (
+                        palm_end
+                        - palm_start
+                    ) * 1000.0,
+
+                "palm_decode_ms":
+                    (
+                        decode_end
+                        - decode_start
+                    ) * 1000.0,
+
+                "roi_ms":
+                    (
+                        roi_end
+                        - roi_start
+                    ) * 1000.0,
+
+                "roi_transform_ms":
+                    (
+                        transform_end
+                        - transform_start
+                    ) * 1000.0,
+
+                "landmark_trt_ms":
+                    (
+                        landmark_end
+                        - landmark_start
+                    ) * 1000.0,
+
+                "restore_ms":
+                    (
+                        restore_end
+                        - restore_start
+                    ) * 1000.0,
+
+                "total_ms":
+                    (
+                        total_end
+                        - total_start
+                    ) * 1000.0,
+            }
         )
-    
-    
 
     def close(self):
         self.palm_model.close()
