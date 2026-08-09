@@ -15,11 +15,10 @@ class HandLandmarker:
     def __init__(self):
         self.anchors = generate_anchors()
 
-        # Landmark ONNX Runtime
         self.landmark_model = ONNXInference()
 
     def detect(self, frame):
-        # Palm
+        # Palm Detection
         palm_input = preprocess(frame)
 
         boxes, scores = detect(palm_input)
@@ -38,7 +37,7 @@ class HandLandmarker:
                 hand_landmarks=[]
             )
 
-        # ROI
+        # ROI生成
         image_height, image_width = frame.shape[:2]
 
         roi = create_roi(
@@ -47,30 +46,28 @@ class HandLandmarker:
             image_height
         )
 
+        # 回転ROIを224x224へ変換
         roi_image, transform = extract_roi(
             frame,
             roi,
             output_size=224
         )
 
-        # Landmark
+        # Hand Landmark
         landmark_outputs = self.landmark_model.infer_frame(
             roi_image
         )
 
-        print("Landmark Output:")
-        for index, output in enumerate(landmark_outputs):
-            print(
-                index,
-                output.shape,
-                output
-            )
+        landmarks = landmark_outputs[0].reshape(
+            21,
+            3
+        )
 
         return HandLandmarkerResult(
             palm_result=palm_results,
             roi=roi,
             roi_image=roi_image,
-            hand_landmarks=[]
+            hand_landmarks=landmarks
         )
 
     def close(self):
