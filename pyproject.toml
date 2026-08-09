@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "pipetrt"
+version = "0.1.0.dev0"
+description = "TensorRT accelerated hand tracking library"
+readme = "README.md"
+requires-python = ">=3.11"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pipetrt*"]
+exclude = ["engines*"]
+namespaces = false
+
+
+[tool.setuptools.package-data]
+pipetrt = [
+    "models/*.onnx"
+]

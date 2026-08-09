@@ -2,6 +2,12 @@ from pathlib import Path
 
 from pipetrt.engines.builder import build_engine
 
+PACKAGE_DIR = (
+    Path(__file__)
+    .resolve()
+    .parents[1]
+)
+
 
 class EngineManager:
     def __init__(
@@ -59,13 +65,18 @@ class EngineManager:
         )
 
     def get_palm_onnx_path(self):
-        return Path(
-            "models/palm_detection.onnx"
+        return (
+        PACKAGE_DIR
+        / "models"
+        / f"palm_detection_{self.model}.onnx"
         )
 
+
     def get_landmark_onnx_path(self):
-        return Path(
-            "models/hand_landmark.onnx"
+        return (
+            PACKAGE_DIR
+            / "models"
+            / f"hand_landmark_{self.model}.onnx"
         )
 
     def ensure_engines(self):
