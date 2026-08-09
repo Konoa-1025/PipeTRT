@@ -1,3 +1,6 @@
+import os
+import sys
+
 from pathlib import Path
 
 from pipetrt.engines.builder import build_engine
@@ -7,6 +10,66 @@ PACKAGE_DIR = (
     .resolve()
     .parents[1]
 )
+
+
+def get_engine_cache_dir():
+    # Windows
+    if sys.platform == "win32":
+        local_app_data = os.environ.get(
+            "LOCALAPPDATA"
+        )
+
+        if local_app_data:
+            cache_dir = (
+                Path(local_app_data)
+                / "PipeTRT"
+                / "Cache"
+                / "engines"
+            )
+        else:
+            cache_dir = (
+                Path.home()
+                / ".pipetrt"
+                / "cache"
+                / "engines"
+            )
+
+    # macOS
+    elif sys.platform == "darwin":
+        cache_dir = (
+            Path.home()
+            / "Library"
+            / "Caches"
+            / "PipeTRT"
+            / "engines"
+        )
+
+    # Linux / Jetson
+    else:
+        xdg_cache_home = os.environ.get(
+            "XDG_CACHE_HOME"
+        )
+
+        if xdg_cache_home:
+            cache_dir = (
+                Path(xdg_cache_home)
+                / "pipetrt"
+                / "engines"
+            )
+        else:
+            cache_dir = (
+                Path.home()
+                / ".cache"
+                / "pipetrt"
+                / "engines"
+            )
+
+    cache_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    return cache_dir
 
 
 class EngineManager:
@@ -35,15 +98,8 @@ class EngineManager:
         self.model = model
         self.precision = precision
 
-        self.engine_dir = Path(
-            "engines"
-        )
-
-        self.engine_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
+        self.engine_dir = get_engine_cache_dir()
+        
     def get_palm_engine_path(self):
         return (
             self.engine_dir
