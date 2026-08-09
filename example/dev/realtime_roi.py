@@ -3,8 +3,6 @@ import math
 import numpy as np
 import pipetrt
 
-from pipetrt.roi.transform import extract_roi
-
 
 landmarker = pipetrt.HandLandmarker()
 
@@ -87,16 +85,11 @@ while True:
             -1
         )
 
-        # ROIを224x224へ変換
-        roi_image, transform = extract_roi(
-            frame,
-            roi,
-            output_size=224
-        )
-
+    # API内部で生成した224x224 ROI画像
+    if result.roi_image is not None:
         cv2.imshow(
             "Landmark Input ROI",
-            roi_image
+            result.roi_image
         )
 
     cv2.imshow(
