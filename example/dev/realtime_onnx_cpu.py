@@ -85,26 +85,26 @@ while True:
             -1
         )
 
-    # 224x224 ROI画像 + 21点Landmark
-    if result.roi_image is not None:
-        roi_view = result.roi_image.copy()
+    # 224x224 ROI画像を表示
+if result.roi_image is not None:
+    cv2.imshow(
+        "Landmark Input ROI",
+        result.roi_image
+    )
 
-        for landmark in result.hand_landmarks:
-            x = int(landmark[0])
-            y = int(landmark[1])
 
-            cv2.circle(
-                roi_view,
-                (x, y),
-                3,
-                (0, 255, 0),
-                -1
-            )
+# 元フレーム上に21点Landmarkを描画
+for landmark in result.hand_landmarks:
+    x = int(landmark[0])
+    y = int(landmark[1])
 
-        cv2.imshow(
-            "Landmark Input ROI",
-            roi_view
-        )
+    cv2.circle(
+        frame,
+        (x, y),
+        4,
+        (0, 255, 255),
+        -1
+    )
 
     cv2.imshow(
         "PipeTRT API",
