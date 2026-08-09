@@ -16,36 +16,64 @@ from pipetrt.tracking.roi import create_tracking_roi
 
 from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
+from pipetrt.engines.manager import EngineManager
+
+
+import time
+
+from pipetrt.palm.decoder import decode
+from pipetrt.palm.anchors import generate_anchors
+from pipetrt.palm.tensorrt_inference import PalmTensorRTInference
+
+from pipetrt.roi.roi import create_roi
+from pipetrt.roi.transform import (
+    extract_roi,
+    restore_landmarks_to_image
+)
+
+from pipetrt.landmark.tensorrt_inference import TensorRTInference
+
+from pipetrt.tracking.roi import create_tracking_roi
+
+from pipetrt.engines.manager import EngineManager
+
+from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
+
 
 class HandLandmarker:
-    def __init__(self,model="full",precision="fp16"):
-        if model not in (
-            "lite",
-            "full"
-        ):
-            raise ValueError(
-                f"Unsupported model: {model}"
-        )
-
-        if precision not in (
-            "fp16",
-            "fp32"
-        ):
-            raise ValueError(
-                f"Unsupported precision: {precision}"
-        )
-
+    def __init__(
+        self,
+        model="full",
+        precision="fp16"
+    ):
         self.model = model
         self.precision = precision
 
-        self.engine_dir = Path(
-            "engines"
+        self.anchors = generate_anchors()
+
+        # Engineを確認
+        # 無ければONNXから自動生成
+        self.engine_manager = EngineManager(
+            model=self.model,
+            precision=self.precision
         )
 
-        self.engine_dir.mkdir(
-            parents=True,
-            exist_ok=True
+        engine_paths = (
+            self.engine_manager.ensure_engines()
         )
+
+        # 生成済みEngineを使用
+        self.palm_model = PalmTensorRTInference(
+            engine_path=engine_paths["palm"]
+        )
+
+        self.landmark_model = TensorRTInference(
+            engine_path=engine_paths["landmark"]
+        )
+
+        self.tracking = False
+        self.tracking_roi = None
+
 
     def detect(self, frame):
         total_start = time.perf_counter()
