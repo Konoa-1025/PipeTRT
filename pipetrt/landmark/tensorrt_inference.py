@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pipetrt.engines.builder import build_engine
+from pipetrt.engines.runtime import TensorRTRuntime
 from pipetrt.landmark.preprocess import preprocess_frame
 
 
@@ -10,7 +10,6 @@ ENGINE_PATH = Path(
 
 
 class TensorRTInference:
-
     def __init__(
         self,
         engine_path=ENGINE_PATH
