@@ -9,7 +9,8 @@ from pipetrt.roi.transform import (
     restore_landmarks_to_image
 )
 
-from pipetrt.landmark.tensorrt_inference import TensorRTInference
+from pipetrt.landmark.onnx_inference import ONNXInference
+
 
 from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
@@ -18,15 +19,13 @@ class HandLandmarker:
     def __init__(self):
         self.anchors = generate_anchors()
 
-        self.landmark_model = TensorRTInference()
+        self.landmark_model = ONNXInference()
 
     def detect(self, frame):
         # Palm Detection
         palm_input = preprocess(frame)
 
-        boxes, scores = detect(
-            palm_input
-        )
+        boxes, scores = detect(palm_input)
 
         palm_results = decode(
             boxes,
@@ -58,27 +57,20 @@ class HandLandmarker:
             output_size=224
         )
 
-        # Hand Landmark TensorRT
-        landmark_outputs = (
-            self.landmark_model.infer_frame(
-                roi_image
-            )
-        )
+        # Hand Landmark
+        landmark_outputs = self.landmark_model.infer_frame(roi_image)
+        roi_landmarks = landmark_outputs["Identity"].reshape(21,3)
 
-        roi_landmarks = (
-            landmark_outputs["Identity"]
-            .reshape(
-                21,
-                3
-            )
+        # 63個 → 21点 × xyz
+        roi_landmarks = landmark_outputs[0].reshape(
+            21,
+            3
         )
 
         # ROI座標 → 元フレーム座標
-        image_landmarks = (
-            restore_landmarks_to_image(
-                roi_landmarks,
-                transform
-            )
+        image_landmarks = restore_landmarks_to_image(
+            roi_landmarks,
+            transform
         )
 
         return HandLandmarkerResult(
@@ -89,4 +81,4 @@ class HandLandmarker:
         )
 
     def close(self):
-        self.landmark_model.close()
+        pass
