@@ -5,7 +5,38 @@ import numpy as np
 import pipetrt
 
 
+# =====================================
+# Startup Benchmark
+# =====================================
+
+startup_start = time.perf_counter()
+
+
+# -----------------------------
+# PipeTRT Initialize
+# -----------------------------
+
+print("PipeTRT initialization start")
+
+pipetrt_start = time.perf_counter()
+
 landmarker = pipetrt.HandLandmarker()
+
+pipetrt_end = time.perf_counter()
+
+print(
+    f"PipeTRT initialization: "
+    f"{pipetrt_end - pipetrt_start:.2f} sec"
+)
+
+
+# -----------------------------
+# Camera Initialize
+# -----------------------------
+
+print("Camera initialization start")
+
+camera_init_start = time.perf_counter()
 
 cap = cv2.VideoCapture(
     0,
@@ -27,6 +58,21 @@ cap.set(
     60
 )
 
+camera_init_end = time.perf_counter()
+
+print(
+    f"Camera initialization: "
+    f"{camera_init_end - camera_init_start:.2f} sec"
+)
+
+
+# -----------------------------
+# Window Initialize
+# -----------------------------
+
+print("Window initialization start")
+
+window_start = time.perf_counter()
 
 cv2.namedWindow(
     "PipeTRT TensorRT Benchmark",
@@ -37,6 +83,44 @@ cv2.namedWindow(
     "Landmark Input ROI",
     cv2.WINDOW_NORMAL
 )
+
+window_end = time.perf_counter()
+
+print(
+    f"Window initialization: "
+    f"{window_end - window_start:.2f} sec"
+)
+
+
+startup_end = time.perf_counter()
+
+print()
+print("==============================")
+print("Startup Benchmark")
+print("==============================")
+
+print(
+    f"PipeTRT : "
+    f"{pipetrt_end - pipetrt_start:.2f} sec"
+)
+
+print(
+    f"Camera  : "
+    f"{camera_init_end - camera_init_start:.2f} sec"
+)
+
+print(
+    f"Window  : "
+    f"{window_end - window_start:.2f} sec"
+)
+
+print(
+    f"TOTAL   : "
+    f"{startup_end - startup_start:.2f} sec"
+)
+
+print("==============================")
+print()
 
 
 smoothed_fps = 0.0
