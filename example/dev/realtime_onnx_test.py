@@ -8,20 +8,27 @@ landmarker = pipetrt.HandLandmarker()
 
 cap = cv2.VideoCapture(0)
 
+cv2.namedWindow(
+    "PipeTRT API",
+    cv2.WINDOW_NORMAL
+)
+
+cv2.namedWindow(
+    "Landmark Input ROI",
+    cv2.WINDOW_NORMAL
+)
+
 
 while True:
     ret, frame = cap.read()
 
     if not ret:
+        print("Camera read failed")
         break
-
-    print("detect start")
 
     result = landmarker.detect(frame)
 
     height, width = frame.shape[:2]
-
-    print("detect end")
 
     # Palm bbox
     if result.palm_result:
@@ -78,44 +85,35 @@ while True:
             2
         )
 
+    # 元画像へ21点描画
+    for landmark in result.hand_landmarks:
+        x = int(landmark[0])
+        y = int(landmark[1])
+
         cv2.circle(
             frame,
-            (
-                int(center_x),
-                int(center_y)
-            ),
-            5,
-            (0, 0, 255),
+            (x, y),
+            4,
+            (0, 255, 255),
             -1
         )
 
-    # 224x224 ROI画像を表示
-if result.roi_image is not None:
-    cv2.imshow(
-        "Landmark Input ROI",
-        result.roi_image
-    )
+    # ROI画像
+    if result.roi_image is not None:
+        cv2.imshow(
+            "Landmark Input ROI",
+            result.roi_image
+        )
 
-
-# 元フレーム上に21点Landmarkを描画
-for landmark in result.hand_landmarks:
-    x = int(landmark[0])
-    y = int(landmark[1])
-
-    cv2.circle(
-        frame,
-        (x, y),
-        4,
-        (0, 255, 255),
-        -1
-    )
-
+    # メイン画像
     cv2.imshow(
         "PipeTRT API",
         frame
     )
 
-    if cv2.waitKey(1) & 0xFF == 27:
+    key = cv2.waitKey(1)
+
+    if key == 27:
         break
 
 
