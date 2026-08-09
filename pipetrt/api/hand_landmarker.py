@@ -1,10 +1,9 @@
-# pipetrt/api/hand_landmarker.py
 from pipetrt.palm.preprocess import preprocess
 from pipetrt.palm.detector import detect
 from pipetrt.palm.decoder import decode
 from pipetrt.palm.anchors import generate_anchors
 
-from pipetrt.roi.roi import create_axis_aligned_roi
+from pipetrt.roi.roi import create_roi
 
 from .hand_landmarker_result import HandLandmarkerResult
 
@@ -30,8 +29,12 @@ class HandLandmarker:
                 roi=None
             )
 
-        roi = create_axis_aligned_roi(
-            palm_results[0]
+        image_height, image_width = frame.shape[:2]
+
+        roi = create_roi(
+            palm_results[0],
+            image_width,
+            image_height
         )
 
         return HandLandmarkerResult(
