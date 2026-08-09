@@ -71,6 +71,17 @@ class HandLandmarker:
 
             landmark_end = time.perf_counter()
 
+            # 一時的なデバッグ
+            print(
+    "Identity_1:",
+    landmark_outputs["Identity_1"]
+)
+
+            print(
+    "Identity_2:",
+    landmark_outputs["Identity_2"]
+)
+
             roi_landmarks = (
                 landmark_outputs["Identity"]
                 .reshape(
@@ -78,6 +89,7 @@ class HandLandmarker:
                     3
                 )
             )
+
 
             # -----------------------------
             # ROI座標 → 元画像座標
