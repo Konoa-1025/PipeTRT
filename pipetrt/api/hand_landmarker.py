@@ -12,6 +12,8 @@ from pipetrt.roi.transform import (
 
 from pipetrt.landmark.tensorrt_inference import TensorRTInference
 
+from pipetrt.tracking.roi import create_tracking_roi
+
 from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
 
@@ -89,6 +91,9 @@ class HandLandmarker:
         decode_end = time.perf_counter()
 
         if not palm_results:
+            self.tracking = False
+            self.tracking_roi = None
+
             total_end = time.perf_counter()
 
             return HandLandmarkerResult(
@@ -180,6 +185,19 @@ class HandLandmarker:
 
         restore_end = time.perf_counter()
 
+        # -----------------------------
+        # Tracking ROI
+        # -----------------------------
+
+        self.tracking_roi = create_tracking_roi(
+            image_landmarks,
+            image_width,
+            image_height
+        )
+
+        if self.tracking_roi is not None:
+            self.tracking = True
+
         total_end = time.perf_counter()
 
         timings = {
@@ -205,6 +223,18 @@ class HandLandmarker:
                 (total_end - total_start) * 1000.0,
         }
 
+        print(
+            f"HandLandmarker total init: "
+            f"{time.perf_counter() - total_start:.2f} sec"
+        )
+
+        # -----------------------------
+        # Tracking State
+        # -----------------------------
+
+        self.tracking = False
+        self.tracking_roi = None
+
         return HandLandmarkerResult(
             palm_result=palm_results,
             roi=roi,
@@ -212,6 +242,8 @@ class HandLandmarker:
             hand_landmarks=image_landmarks,
             timings=timings
         )
+    
+    
 
     def close(self):
         self.palm_model.close()
