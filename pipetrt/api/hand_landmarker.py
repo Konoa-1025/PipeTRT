@@ -70,17 +70,59 @@ class HandLandmarker:
             )
 
             landmark_end = time.perf_counter()
+            # -----------------------------
+            # Hand Presence確認
+            # -----------------------------
 
-            # 一時的なデバッグ
-            print(
-    "Identity_1:",
-    landmark_outputs["Identity_1"]
-)
+            hand_presence = float(
+                landmark_outputs["Identity_1"][0][0]
+            )
 
-            print(
-    "Identity_2:",
-    landmark_outputs["Identity_2"]
-)
+            # MediaPipeと同じく0.5未満なら
+            # Tracking失敗と判断
+            if hand_presence < 0.5:
+                self.tracking = False
+                self.tracking_roi = None
+
+                total_end = time.perf_counter()
+
+                return HandLandmarkerResult(
+                    palm_result=[],
+                    roi=roi,
+                    roi_image=roi_image,
+                    hand_landmarks=[],
+                    timings={
+                        "mode": "TRACKING_LOST",
+
+                        "palm_trt_ms": 0.0,
+                        "palm_decode_ms": 0.0,
+                        "roi_ms": 0.0,
+
+                        "roi_transform_ms":
+                            (
+                                transform_end
+                                - transform_start
+                            ) * 1000.0,
+
+                        "landmark_trt_ms":
+                            (
+                                landmark_end
+                                - landmark_start
+                            ) * 1000.0,
+
+                        "restore_ms": 0.0,
+
+                        "total_ms":
+                            (
+                                total_end
+                                - total_start
+                            ) * 1000.0,
+                    }
+                )
+
+            # -----------------------------
+            # Landmark取得
+            # -----------------------------
 
             roi_landmarks = (
                 landmark_outputs["Identity"]
@@ -89,7 +131,6 @@ class HandLandmarker:
                     3
                 )
             )
-
 
             # -----------------------------
             # ROI座標 → 元画像座標
