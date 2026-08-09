@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pipetrt.engine.runtime import TensorRTRuntime
+from pipetrt.engines.builder import build_engine
 from pipetrt.landmark.preprocess import preprocess_frame
 
 
