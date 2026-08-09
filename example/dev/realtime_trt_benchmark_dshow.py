@@ -447,6 +447,7 @@ while True:
     f"PipeTRT Total: {timings.get('total_ms', 0.0):.2f} ms",
     f"Draw         : {draw_ms:.2f} ms",
     f"Frame Total  : {total_ms:.2f} ms",
+    f"MODE         : {timings.get('mode', 'UNKNOWN')}",
 ]
 
     text_y = 30
