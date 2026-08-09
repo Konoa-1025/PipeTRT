@@ -18,15 +18,34 @@ from pipetrt.api.hand_landmarker_result import HandLandmarkerResult
 
 
 class HandLandmarker:
-    def __init__(self):
-        self.anchors = generate_anchors()
+    def __init__(self,model="full",precision="fp16"):
+        if model not in (
+            "lite",
+            "full"
+        ):
+            raise ValueError(
+                f"Unsupported model: {model}"
+        )
 
-        self.palm_model = PalmTensorRTInference()
-        self.landmark_model = TensorRTInference()
+        if precision not in (
+            "fp16",
+            "fp32"
+        ):
+            raise ValueError(
+                f"Unsupported precision: {precision}"
+        )
 
-        # Tracking状態
-        self.tracking = False
-        self.tracking_roi = None
+        self.model = model
+        self.precision = precision
+
+        self.engine_dir = Path(
+            "engines"
+        )
+
+        self.engine_dir.mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
     def detect(self, frame):
         total_start = time.perf_counter()
