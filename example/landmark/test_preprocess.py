@@ -7,7 +7,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from pipetrt.preprocess import preprocess_image
+from pipetrt.landmark.preprocess import preprocess_image
 
 
 IMAGE_PATH = PROJECT_ROOT / "samples" / "hand.jpg"

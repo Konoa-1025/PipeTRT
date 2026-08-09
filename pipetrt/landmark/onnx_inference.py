@@ -4,8 +4,8 @@ from pathlib import Path
 
 import onnxruntime as ort
 
-from pipetrt.preprocess import preprocess_frame
-from pipetrt.preprocess import preprocess_image
+from pipetrt.landmark.preprocess import preprocess_frame
+from pipetrt.landmark.preprocess import preprocess_image
 
 
 MODEL_PATH = Path("models/hand_landmark.onnx")
