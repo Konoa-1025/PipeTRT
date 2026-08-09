@@ -4,6 +4,7 @@ from pipetrt.palm.decoder import decode
 from pipetrt.palm.anchors import generate_anchors
 
 from pipetrt.roi.roi import create_roi
+from pipetrt.roi.transform import extract_roi
 
 from .hand_landmarker_result import HandLandmarkerResult
 
@@ -26,7 +27,8 @@ class HandLandmarker:
         if not palm_results:
             return HandLandmarkerResult(
                 palm_result=[],
-                roi=None
+                roi=None,
+                roi_image=None
             )
 
         image_height, image_width = frame.shape[:2]
@@ -37,9 +39,16 @@ class HandLandmarker:
             image_height
         )
 
+        roi_image, transform = extract_roi(
+            frame,
+            roi,
+            output_size=224
+        )
+
         return HandLandmarkerResult(
             palm_result=palm_results,
-            roi=roi
+            roi=roi,
+            roi_image=roi_image
         )
 
     def close(self):
