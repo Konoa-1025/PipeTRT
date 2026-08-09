@@ -3,7 +3,11 @@ import numpy as np
 import math
 
 
-def extract_roi(frame, roi, output_size=224):
+def extract_roi(
+    frame,
+    roi,
+    output_size=224
+):
     height, width = frame.shape[:2]
 
     center_x = roi["center_x"] * width
@@ -20,12 +24,15 @@ def extract_roi(frame, roi, output_size=224):
     half_width = roi_width / 2.0
     half_height = roi_height / 2.0
 
-    local_points = np.array([
-        [-half_width, -half_height],
-        [ half_width, -half_height],
-        [ half_width,  half_height],
-        [-half_width,  half_height]
-    ], dtype=np.float32)
+    local_points = np.array(
+        [
+            [-half_width, -half_height],
+            [ half_width, -half_height],
+            [ half_width,  half_height],
+            [-half_width,  half_height]
+        ],
+        dtype=np.float32
+    )
 
     source_points = []
 
@@ -42,22 +49,27 @@ def extract_roi(frame, roi, output_size=224):
             + center_y
         )
 
-        source_points.append([
-            rotated_x,
-            rotated_y
-        ])
+        source_points.append(
+            [
+                rotated_x,
+                rotated_y
+            ]
+        )
 
     source_points = np.array(
         source_points,
         dtype=np.float32
     )
 
-    destination_points = np.array([
-        [0, 0],
-        [output_size - 1, 0],
-        [output_size - 1, output_size - 1],
-        [0, output_size - 1]
-    ], dtype=np.float32)
+    destination_points = np.array(
+        [
+            [0, 0],
+            [output_size - 1, 0],
+            [output_size - 1, output_size - 1],
+            [0, output_size - 1]
+        ],
+        dtype=np.float32
+    )
 
     transform = cv2.getPerspectiveTransform(
         source_points,
@@ -72,3 +84,53 @@ def extract_roi(frame, roi, output_size=224):
     )
 
     return roi_image, transform
+
+
+def restore_landmarks_to_image(
+    landmarks,
+    transform
+):
+    inverse_transform = np.linalg.inv(
+        transform
+    )
+
+    roi_points = landmarks[:, :2].astype(
+        np.float32
+    )
+
+    roi_points = roi_points.reshape(
+        -1,
+        1,
+        2
+    )
+
+    restored_points = cv2.perspectiveTransform(
+        roi_points,
+        inverse_transform
+    )
+
+    restored_points = restored_points.reshape(
+        -1,
+        2
+    )
+
+    image_landmarks = []
+
+    for index, point in enumerate(restored_points):
+        x = point[0]
+        y = point[1]
+
+        z = landmarks[index][2]
+
+        image_landmarks.append(
+            [
+                x,
+                y,
+                z
+            ]
+        )
+
+    return np.array(
+        image_landmarks,
+        dtype=np.float32
+    )
