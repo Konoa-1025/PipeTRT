@@ -10,6 +10,15 @@ description = "TensorRT accelerated hand tracking library"
 readme = "README.md"
 requires-python = ">=3.11"
 
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "tensorrt",
+    "cuda-python",
+    "onnx",
+    "nvidia-modelopt[onnx]",
+]
+
 
 [tool.setuptools.packages.find]
 where = ["."]
