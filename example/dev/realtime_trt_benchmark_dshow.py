@@ -1,12 +1,314 @@
+# example/dev/realtime_trt_benchmark.py
 
-#! 起動高速のためにdshowを使用する
+# ! 起動高速化のために DSHOW を使用
+# ! 最終性能測定では MSMF でも測定する
 
 import cv2
 import math
 import time
 import numpy as np
+
 import pipetrt
+
 from pipetrt.tracking.roi import create_tracking_roi
+
+
+# =====================================
+# Settings
+# =====================================
+
+CAMERA_ID = 0
+
+CAMERA_WIDTH = 1280
+CAMERA_HEIGHT = 720
+CAMERA_FPS = 60
+
+# 最初の数十フレームは
+# TensorRT / Camera / Windows側の安定待ちとして除外
+WARMUP_FRAMES = 60
+
+# Tracking中Palm TRTがこれ以上動いていたら異常とする
+PALM_SKIP_EPSILON_MS = 0.001
+
+
+# =====================================
+# Benchmark Storage
+# =====================================
+
+detection_success_times = []
+detection_search_times = []
+
+tracking_times = []
+tracking_lost_times = []
+
+frame_times = []
+
+palm_detection_times = []
+landmark_detection_times = []
+landmark_tracking_times = []
+
+tracking_palm_violation_count = 0
+
+detection_success_count = 0
+detection_search_count = 0
+
+tracking_count = 0
+tracking_lost_count = 0
+
+total_measured_frames = 0
+
+
+# =====================================
+# Statistics
+# =====================================
+
+def print_stats(
+    name,
+    values
+):
+    if not values:
+        print(
+            f"{name:<24}: no data"
+        )
+        return
+
+    values_array = np.asarray(
+        values,
+        dtype=np.float32
+    )
+
+    print(
+        f"{name:<24}: "
+        f"AVG {np.mean(values_array):7.3f} ms | "
+        f"MED {np.median(values_array):7.3f} ms | "
+        f"P95 {np.percentile(values_array, 95):7.3f} ms"
+    )
+
+
+def print_benchmark_result():
+    print()
+    print("==============================================")
+    print("PipeTRT Tracking Benchmark Result")
+    print("==============================================")
+    print()
+
+    print(
+        f"Measured frames          : "
+        f"{total_measured_frames}"
+    )
+
+    print()
+
+    print(
+        f"Detection success frames : "
+        f"{detection_success_count}"
+    )
+
+    print(
+        f"Detection search frames  : "
+        f"{detection_search_count}"
+    )
+
+    print(
+        f"Tracking frames          : "
+        f"{tracking_count}"
+    )
+
+    print(
+        f"Tracking lost frames     : "
+        f"{tracking_lost_count}"
+    )
+
+    print()
+
+    print("----------------------------------------------")
+    print("PipeTRT Processing Time")
+    print("----------------------------------------------")
+
+    print_stats(
+        "Detection Success",
+        detection_success_times
+    )
+
+    print_stats(
+        "Detection Search",
+        detection_search_times
+    )
+
+    print_stats(
+        "Tracking",
+        tracking_times
+    )
+
+    print_stats(
+        "Tracking Lost",
+        tracking_lost_times
+    )
+
+    print()
+
+    print("----------------------------------------------")
+    print("Model Processing Time")
+    print("----------------------------------------------")
+
+    print_stats(
+        "Palm TRT",
+        palm_detection_times
+    )
+
+    print_stats(
+        "Landmark Detection",
+        landmark_detection_times
+    )
+
+    print_stats(
+        "Landmark Tracking",
+        landmark_tracking_times
+    )
+
+    print()
+
+    # =====================================
+    # Detection vs Tracking
+    # =====================================
+
+    if (
+        detection_success_times
+        and tracking_times
+    ):
+        detection_avg = float(
+            np.mean(
+                detection_success_times
+            )
+        )
+
+        tracking_avg = float(
+            np.mean(
+                tracking_times
+            )
+        )
+
+        saved_ms = (
+            detection_avg
+            - tracking_avg
+        )
+
+        reduction = (
+            saved_ms
+            / detection_avg
+            * 100.0
+        )
+
+        detection_theoretical_fps = (
+            1000.0
+            / detection_avg
+            if detection_avg > 0
+            else 0.0
+        )
+
+        tracking_theoretical_fps = (
+            1000.0
+            / tracking_avg
+            if tracking_avg > 0
+            else 0.0
+        )
+
+        print("----------------------------------------------")
+        print("Tracking Effect")
+        print("----------------------------------------------")
+
+        print(
+            f"Detection AVG            : "
+            f"{detection_avg:.3f} ms"
+        )
+
+        print(
+            f"Tracking AVG             : "
+            f"{tracking_avg:.3f} ms"
+        )
+
+        print(
+            f"Saved per frame          : "
+            f"{saved_ms:.3f} ms"
+        )
+
+        print(
+            f"Processing reduction     : "
+            f"{reduction:.1f} %"
+        )
+
+        print()
+
+        print(
+            f"Detection theoretical FPS: "
+            f"{detection_theoretical_fps:.1f}"
+        )
+
+        print(
+            f"Tracking theoretical FPS : "
+            f"{tracking_theoretical_fps:.1f}"
+        )
+
+        print()
+
+    # =====================================
+    # Whole Frame
+    # =====================================
+
+    if frame_times:
+        frame_avg = float(
+            np.mean(
+                frame_times
+            )
+        )
+
+        frame_fps = (
+            1000.0 / frame_avg
+            if frame_avg > 0
+            else 0.0
+        )
+
+        print("----------------------------------------------")
+        print("Application")
+        print("----------------------------------------------")
+
+        print(
+            f"Frame AVG                : "
+            f"{frame_avg:.3f} ms"
+        )
+
+        print(
+            f"Measured FPS             : "
+            f"{frame_fps:.1f}"
+        )
+
+        print()
+
+    # =====================================
+    # Palm Skip
+    # =====================================
+
+    print("----------------------------------------------")
+    print("Palm Detection Skip")
+    print("----------------------------------------------")
+
+    print(
+        f"Tracking Palm violations : "
+        f"{tracking_palm_violation_count}"
+    )
+
+    if tracking_palm_violation_count == 0:
+        print(
+            "Palm skip                : OK"
+        )
+
+    else:
+        print(
+            "Palm skip                : NG"
+        )
+
+    print()
+    print("==============================================")
 
 
 # =====================================
@@ -20,7 +322,9 @@ startup_start = time.perf_counter()
 # PipeTRT Initialize
 # -----------------------------
 
-print("PipeTRT initialization start")
+print(
+    "PipeTRT initialization start"
+)
 
 pipetrt_start = time.perf_counter()
 
@@ -38,18 +342,20 @@ print(
 # Camera Initialize
 # -----------------------------
 
-print("Camera initialization start")
+print(
+    "Camera initialization start"
+)
 
-# カメラ初期化全体の計測開始
 camera_init_start = time.perf_counter()
 
 
 # VideoCapture
+
 start = time.perf_counter()
 
 cap = cv2.VideoCapture(
-    0,
-    cv2.CAP_DSHOW
+    CAMERA_ID,
+    cv2.CAP_MSMF
 )
 
 print(
@@ -59,11 +365,12 @@ print(
 
 
 # Width
+
 start = time.perf_counter()
 
 cap.set(
     cv2.CAP_PROP_FRAME_WIDTH,
-    1280
+    CAMERA_WIDTH
 )
 
 print(
@@ -73,11 +380,12 @@ print(
 
 
 # Height
+
 start = time.perf_counter()
 
 cap.set(
     cv2.CAP_PROP_FRAME_HEIGHT,
-    720
+    CAMERA_HEIGHT
 )
 
 print(
@@ -87,11 +395,12 @@ print(
 
 
 # FPS
+
 start = time.perf_counter()
 
 cap.set(
     cv2.CAP_PROP_FPS,
-    60
+    CAMERA_FPS
 )
 
 print(
@@ -101,6 +410,7 @@ print(
 
 
 # First Read
+
 start = time.perf_counter()
 
 ret, test_frame = cap.read()
@@ -110,8 +420,6 @@ print(
     f"{time.perf_counter() - start:.2f} sec"
 )
 
-
-# カメラ初期化全体の計測終了
 camera_init_end = time.perf_counter()
 
 print(
@@ -124,7 +432,9 @@ print(
 # Window Initialize
 # -----------------------------
 
-print("Window initialization start")
+print(
+    "Window initialization start"
+)
 
 window_start = time.perf_counter()
 
@@ -145,8 +455,12 @@ print(
     f"{window_end - window_start:.2f} sec"
 )
 
-
 startup_end = time.perf_counter()
+
+
+# =====================================
+# Startup Result
+# =====================================
 
 print()
 print("==============================")
@@ -176,16 +490,35 @@ print(
 print("==============================")
 print()
 
+print(
+    f"Warmup: {WARMUP_FRAMES} frames"
+)
+
+print()
+
+
+# =====================================
+# Runtime State
+# =====================================
 
 smoothed_fps = 0.0
 
+last_mode = None
+
+frame_count = 0
+
+
+# =====================================
+# Main Loop
+# =====================================
 
 while True:
     frame_start = time.perf_counter()
 
-    # -----------------------------
+
+    # =====================================
     # Camera
-    # -----------------------------
+    # =====================================
 
     camera_start = time.perf_counter()
 
@@ -194,12 +527,16 @@ while True:
     camera_end = time.perf_counter()
 
     if not ret:
-        print("Camera read failed")
+        print(
+            "Camera read failed"
+        )
+
         break
 
-    # -----------------------------
+
+    # =====================================
     # PipeTRT
-    # -----------------------------
+    # =====================================
 
     detect_start = time.perf_counter()
 
@@ -211,19 +548,48 @@ while True:
 
     height, width = frame.shape[:2]
 
-    # -----------------------------
-    # Draw
-    # -----------------------------
+    timings = result.timings
+
+
+    # =====================================
+    # Mode
+    # =====================================
+
+    mode = timings.get(
+        "mode",
+        "UNKNOWN"
+    )
+
+    if mode != last_mode:
+        print(
+            f"[MODE] "
+            f"{last_mode} -> {mode}"
+        )
+
+        last_mode = mode
+
+
+    # =====================================
+    # Draw Start
+    # =====================================
 
     draw_start = time.perf_counter()
 
+
+    # -------------------------------------
     # Palm bbox
+    # Blue
+    # -------------------------------------
+
     if result.palm_result:
         palm = result.palm_result[0]
 
-        x_min, y_min, x_max, y_max = (
-            palm["bbox"]
-        )
+        (
+            x_min,
+            y_min,
+            x_max,
+            y_max
+        ) = palm["bbox"]
 
         palm_x1 = int(
             x_min * width
@@ -243,13 +609,28 @@ while True:
 
         cv2.rectangle(
             frame,
-            (palm_x1, palm_y1),
-            (palm_x2, palm_y2),
-            (255, 0, 0),
+            (
+                palm_x1,
+                palm_y1
+            ),
+            (
+                palm_x2,
+                palm_y2
+            ),
+            (
+                255,
+                0,
+                0
+            ),
             2
         )
 
-    # Rotated ROI
+
+    # -------------------------------------
+    # Current ROI
+    # Green
+    # -------------------------------------
+
     if result.roi is not None:
         roi = result.roi
 
@@ -273,15 +654,19 @@ while True:
             * height
         )
 
-        rotation_degree = (
-            math.degrees(
-                roi["rotation"]
-            )
+        rotation_degree = math.degrees(
+            roi["rotation"]
         )
 
         rotated_rect = (
-            (center_x, center_y),
-            (roi_width, roi_height),
+            (
+                center_x,
+                center_y
+            ),
+            (
+                roi_width,
+                roi_height
+            ),
             rotation_degree
         )
 
@@ -297,11 +682,20 @@ while True:
             frame,
             [box],
             True,
-            (0, 255, 0),
+            (
+                0,
+                255,
+                0
+            ),
             2
         )
 
+
+    # -------------------------------------
     # 21 Landmarks
+    # Yellow
+    # -------------------------------------
+
     for landmark in (
         result.hand_landmarks
     ):
@@ -315,20 +709,39 @@ while True:
 
         cv2.circle(
             frame,
-            (x, y),
+            (
+                x,
+                y
+            ),
             4,
-            (0, 255, 255),
+            (
+                0,
+                255,
+                255
+            ),
             -1
         )
 
-    draw_end = time.perf_counter()
+
+    # -------------------------------------
+    # Next Tracking ROI
+    # Purple
+    #
+    # Debug visualization only
+    # -------------------------------------
+
     tracking_roi = None
 
-    if len(result.hand_landmarks) == 21:
-        tracking_roi = create_tracking_roi(
-            result.hand_landmarks,
-            width,
-            height
+    if len(
+        result.hand_landmarks
+    ) == 21:
+
+        tracking_roi = (
+            create_tracking_roi(
+                result.hand_landmarks,
+                width,
+                height
+            )
         )
 
     if tracking_roi is not None:
@@ -374,21 +787,31 @@ while True:
             tracking_rect
         )
 
-        tracking_box = tracking_box.astype(
-            np.int32
+        tracking_box = (
+            tracking_box.astype(
+                np.int32
+            )
         )
 
         cv2.polylines(
             frame,
             [tracking_box],
             True,
-            (255, 0, 255),
+            (
+                255,
+                0,
+                255
+            ),
             2
         )
 
-    # -----------------------------
+
+    draw_end = time.perf_counter()
+
+
+    # =====================================
     # Performance
-    # -----------------------------
+    # =====================================
 
     frame_end = time.perf_counter()
 
@@ -413,7 +836,8 @@ while True:
     ) * 1000.0
 
     current_fps = (
-        1000.0 / total_ms
+        1000.0
+        / total_ms
         if total_ms > 0
         else 0.0
     )
@@ -425,30 +849,156 @@ while True:
 
     else:
         smoothed_fps = (
-            smoothed_fps * 0.9
-            + current_fps * 0.1
+            smoothed_fps
+            * 0.9
+            + current_fps
+            * 0.1
         )
 
-    # -----------------------------
-    # Performance Draw
-    # -----------------------------
 
-    timings = result.timings
+    # =====================================
+    # Benchmark Collection
+    # =====================================
+
+    frame_count += 1
+
+    measuring = (
+        frame_count
+        > WARMUP_FRAMES
+    )
+
+    if measuring:
+        total_measured_frames += 1
+
+        frame_times.append(
+            total_ms
+        )
+
+        pipetrt_total_ms = (
+            timings.get(
+                "total_ms",
+                detect_ms
+            )
+        )
+
+        palm_trt_ms = (
+            timings.get(
+                "palm_trt_ms",
+                0.0
+            )
+        )
+
+        landmark_trt_ms = (
+            timings.get(
+                "landmark_trt_ms",
+                0.0
+            )
+        )
+
+
+        # ---------------------------------
+        # DETECTION
+        # ---------------------------------
+
+        if mode == "DETECTION":
+
+            # Palmを実行した時間
+            palm_detection_times.append(
+                palm_trt_ms
+            )
+
+            # 手を発見して
+            # Landmarkまで実行したDetection
+            if (
+                len(
+                    result.hand_landmarks
+                )
+                == 21
+            ):
+                detection_success_times.append(
+                    pipetrt_total_ms
+                )
+
+                landmark_detection_times.append(
+                    landmark_trt_ms
+                )
+
+                detection_success_count += 1
+
+            # Palmで探したけど
+            # 手がいなかったDetection
+            else:
+                detection_search_times.append(
+                    pipetrt_total_ms
+                )
+
+                detection_search_count += 1
+
+
+        # ---------------------------------
+        # TRACKING
+        # ---------------------------------
+
+        elif mode == "TRACKING":
+            tracking_times.append(
+                pipetrt_total_ms
+            )
+
+            landmark_tracking_times.append(
+                landmark_trt_ms
+            )
+
+            tracking_count += 1
+
+            # Tracking中にPalm TRTが
+            # 動いていたら異常
+            if (
+                palm_trt_ms
+                > PALM_SKIP_EPSILON_MS
+            ):
+                tracking_palm_violation_count += 1
+
+
+        # ---------------------------------
+        # TRACKING LOST
+        # ---------------------------------
+
+        elif mode == "TRACKING_LOST":
+            tracking_lost_times.append(
+                pipetrt_total_ms
+            )
+
+            tracking_lost_count += 1
+
+
+    # =====================================
+    # Performance Draw
+    # =====================================
+
+    warmup_text = (
+        "MEASURING"
+        if measuring
+        else (
+            f"WARMUP "
+            f"{frame_count}/{WARMUP_FRAMES}"
+        )
+    )
 
     performance_lines = [
-    f"FPS          : {smoothed_fps:.1f}",
-    f"Camera       : {camera_ms:.2f} ms",
-    f"Palm TRT     : {timings.get('palm_trt_ms', 0.0):.2f} ms",
-    f"Palm Decode  : {timings.get('palm_decode_ms', 0.0):.2f} ms",
-    f"ROI          : {timings.get('roi_ms', 0.0):.2f} ms",
-    f"ROI Transform: {timings.get('roi_transform_ms', 0.0):.2f} ms",
-    f"Landmark TRT : {timings.get('landmark_trt_ms', 0.0):.2f} ms",
-    f"Restore      : {timings.get('restore_ms', 0.0):.2f} ms",
-    f"PipeTRT Total: {timings.get('total_ms', 0.0):.2f} ms",
-    f"Draw         : {draw_ms:.2f} ms",
-    f"Frame Total  : {total_ms:.2f} ms",
-    f"MODE         : {timings.get('mode', 'UNKNOWN')}",
-]
+        f"FPS          : {smoothed_fps:.1f}",
+        f"Camera       : {camera_ms:.2f} ms",
+        f"Palm TRT     : {timings.get('palm_trt_ms', 0.0):.2f} ms",
+        f"Palm Decode  : {timings.get('palm_decode_ms', 0.0):.2f} ms",
+        f"ROI          : {timings.get('roi_ms', 0.0):.2f} ms",
+        f"ROI Transform: {timings.get('roi_transform_ms', 0.0):.2f} ms",
+        f"Landmark TRT : {timings.get('landmark_trt_ms', 0.0):.2f} ms",
+        f"Restore      : {timings.get('restore_ms', 0.0):.2f} ms",
+        f"PipeTRT Total: {timings.get('total_ms', 0.0):.2f} ms",
+        f"Draw         : {draw_ms:.2f} ms",
+        f"Frame Total  : {total_ms:.2f} ms",
+        f"MODE         : {mode}",
+        f"BENCHMARK    : {warmup_text}",
+    ]
 
     text_y = 30
 
@@ -456,10 +1006,17 @@ while True:
         cv2.putText(
             frame,
             line,
-            (20, text_y),
+            (
+                20,
+                text_y
+            ),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.65,
-            (255, 255, 255),
+            (
+                255,
+                255,
+                255
+            ),
             2,
             cv2.LINE_AA
         )
@@ -467,9 +1024,32 @@ while True:
         text_y += 30
 
 
-    # -----------------------------
+    # =====================================
+    # Mode Big Label
+    # =====================================
+
+    cv2.putText(
+        frame,
+        f"MODE: {mode}",
+        (
+            width - 350,
+            50
+        ),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.0,
+        (
+            255,
+            255,
+            255
+        ),
+        2,
+        cv2.LINE_AA
+    )
+
+
+    # =====================================
     # Windows
-    # -----------------------------
+    # =====================================
 
     if result.roi_image is not None:
         cv2.imshow(
@@ -481,6 +1061,11 @@ while True:
         "PipeTRT TensorRT Benchmark",
         frame
     )
+
+
+    # =====================================
+    # Keyboard
+    # =====================================
 
     key = (
         cv2.waitKey(1)
@@ -494,6 +1079,19 @@ while True:
         break
 
 
+# =====================================
+# Result
+# =====================================
+
+print_benchmark_result()
+
+
+# =====================================
+# Cleanup
+# =====================================
+
 landmarker.close()
+
 cap.release()
+
 cv2.destroyAllWindows()
