@@ -1,10 +1,13 @@
 import cv2
+import math
+import numpy as np
 import pipetrt
 
 
 landmarker = pipetrt.HandLandmarker()
 
 cap = cv2.VideoCapture(0)
+
 
 while True:
     ret, frame = cap.read()
@@ -35,39 +38,49 @@ while True:
             2
         )
 
-    # ROI
+    # Rotated ROI
     if result.roi is not None:
         roi = result.roi
 
-        center_x = int(roi["center_x"] * width)
-        center_y = int(roi["center_y"] * height)
+        center_x = roi["center_x"] * width
+        center_y = roi["center_y"] * height
 
-        roi_width = int(roi["width"] * width)
-        roi_height = int(roi["height"] * height)
+        roi_width = roi["width"] * width
+        roi_height = roi["height"] * height
 
-        roi_x1 = int(center_x - roi_width / 2)
-        roi_y1 = int(center_y - roi_height / 2)
+        rotation_degree = math.degrees(
+            roi["rotation"]
+        )
 
-        roi_x2 = int(center_x + roi_width / 2)
-        roi_y2 = int(center_y + roi_height / 2)
+        rotated_rect = (
+            (center_x, center_y),
+            (roi_width, roi_height),
+            rotation_degree
+        )
 
-        cv2.rectangle(
+        box = cv2.boxPoints(rotated_rect)
+        box = box.astype(np.int32)
+
+        cv2.polylines(
             frame,
-            (roi_x1, roi_y1),
-            (roi_x2, roi_y2),
+            [box],
+            True,
             (0, 255, 0),
             2
         )
 
         cv2.circle(
             frame,
-            (center_x, center_y),
+            (int(center_x), int(center_y)),
             5,
             (0, 0, 255),
             -1
         )
 
-    cv2.imshow("PipeTRT API", frame)
+    cv2.imshow(
+        "PipeTRT API",
+        frame
+    )
 
     if cv2.waitKey(1) & 0xFF == 27:
         break
