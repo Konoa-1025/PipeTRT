@@ -53,7 +53,7 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
   - APIの戻り値へLandmark結果を追加する
   - 元画像上へ21点を描画して確認する
 
-- [ ] フェーズ5: TrackingをAPIへ接続
+- [x] フェーズ5: TrackingをAPIへ接続
   - Landmark結果から次フレームのROIを生成する
   - Palm Detectionを毎フレーム実行しない処理を作成する
   - Tracking失敗時にPalm Detectionへ戻る処理を作成する
