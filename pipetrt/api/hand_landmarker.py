@@ -4,7 +4,10 @@ from pipetrt.palm.decoder import decode
 from pipetrt.palm.anchors import generate_anchors
 
 from pipetrt.roi.roi import create_roi
-from pipetrt.roi.transform import extract_roi
+from pipetrt.roi.transform import (
+    extract_roi,
+    restore_landmarks_to_image
+)
 
 from pipetrt.landmark.onnx_inference import ONNXInference
 
@@ -58,16 +61,23 @@ class HandLandmarker:
             roi_image
         )
 
-        landmarks = landmark_outputs[0].reshape(
+        # 63個 → 21点 × xyz
+        roi_landmarks = landmark_outputs[0].reshape(
             21,
             3
+        )
+
+        # ROI座標 → 元フレーム座標
+        image_landmarks = restore_landmarks_to_image(
+            roi_landmarks,
+            transform
         )
 
         return HandLandmarkerResult(
             palm_result=palm_results,
             roi=roi,
             roi_image=roi_image,
-            hand_landmarks=landmarks
+            hand_landmarks=image_landmarks
         )
 
     def close(self):

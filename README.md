@@ -39,14 +39,14 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
   - APIの戻り値としてPalm結果を返す
   - 静止画・リアルタイムで動作確認する
 
-- [ ] フェーズ3: ROIをAPIへ接続
+- [x] フェーズ3: ROIをAPIへ接続
   - Palm Detection結果をROIへ渡す
   - ROIを生成する
   - ROI情報をAPIの戻り値へ追加する
   - Palm DetectionとROIの連続処理を確認する
   - リアルタイムでROIを描画して確認する
 
-- [ ] フェーズ4: Hand LandmarkをAPIへ接続
+- [x] フェーズ4: Hand LandmarkをAPIへ接続
   - ROI画像をHand Landmarkへ入力する
   - 21点ランドマークを取得する
   - ROI座標から元画像座標へ変換する
