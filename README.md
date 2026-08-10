@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/pipetrt_header.png" alt="PipeTRT" width="100%">
+  <img src="./assets/pipetrt_header.png" alt="PipeTRT" width="850">
 </p>
 
 <p align="center">
