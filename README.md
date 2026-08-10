@@ -1,8 +1,20 @@
-# PipeTRT JP
+<p align="center">
+  <img src="./assets/pipetrt_header.png" alt="PipeTRT" width="100%">
+</p>
 
-[![PyPI version](https://img.shields.io/pypi/v/pipetrt)](https://pypi.org/project/pipetrt/)
-[![Python](https://img.shields.io/pypi/pyversions/pipetrt)](https://pypi.org/project/pipetrt/)
-[![License](https://img.shields.io/github/license/Konoa-1025/PipeTRT)](LICENSE)
+<p align="center">
+  MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/pipetrt/">
+    <img src="https://img.shields.io/pypi/v/pipetrt">
+  </a>
+  <img src="https://img.shields.io/pypi/pyversions/pipetrt">
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/Konoa-1025/PipeTRT">
+  </a>
+</p>
 
 MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 
