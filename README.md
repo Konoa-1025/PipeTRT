@@ -7,5 +7,8 @@ MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 プレリリースで動くやつを乗せることもありますが動くことしか確認していないため安定性は保証しません。
 安定性も十分なものは、mainやリリースから確認してください。
 
+## demo 0.1.0
+![PipeTRT Real-time Hand Tracking](assets/pipetrt0.1.0_deno.gif)
+
 ## Issue
 問題があればmainか、修正したほうがいい場所が分かってる場合はそのブランチ内のissueを切ってください！ 区切りがついたら修正します。
