@@ -10,7 +10,7 @@ PipeTRTは、自分自身の開発だけではなく、将来同じようにJets
 
 ## demo 0.1.0
 
-![PipeTRT Real-time Hand Tracking](assets\pipetrt0.1.0_demo.gif)
+![PipeTRT Real-time Hand Tracking](assets\pipetrt0.1.0_demo_lite.gif)
 
 
 ## リリース 0.1.0
