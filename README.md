@@ -8,9 +8,9 @@ MediaPipeのハンドトラッキング構成を参考に開発した、NVIDIA G
 
 PipeTRTは、自分自身の開発だけではなく、将来同じようにJetsonやNVIDIA GPUを用いたエッジAI開発を行う学生や開発者が、手軽に利用できるライブラリを目指しています。
 
-## demo 0.1.0
+## Demo 0.1.0
 
-![PipeTRT Real-time Hand Tracking](assets\pipetrt0.1.0_demo_lite.gif)
+![PipeTRT v0.1.0 Demo](./assets/pipetrt0.1.0_demo_lite.gif)
 
 
 ## リリース 0.1.0
