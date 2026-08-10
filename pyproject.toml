@@ -8,7 +8,7 @@ name = "pipetrt"
 version = "0.1.0"
 description = "TensorRT accelerated hand tracking library"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.12"
 license = "Apache-2.0"
 
 authors = [
