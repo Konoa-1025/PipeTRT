@@ -1,5 +1,9 @@
 # PipeTRT JP
 
+[![PyPI version](https://img.shields.io/pypi/v/pipetrt)](https://pypi.org/project/pipetrt/)
+[![Python](https://img.shields.io/pypi/pyversions/pipetrt)](https://pypi.org/project/pipetrt/)
+[![License](https://img.shields.io/github/license/Konoa-1025/PipeTRT)](LICENSE)
+
 MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
 
 MediaPipeのハンドトラッキング構成を参考に開発した、NVIDIA GPU向けTensorRT手骨格検出ライブラリです。
@@ -8,9 +12,10 @@ MediaPipeのハンドトラッキング構成を参考に開発した、NVIDIA G
 
 PipeTRTは、自分自身の開発だけではなく、将来同じようにJetsonやNVIDIA GPUを用いたエッジAI開発を行う学生や開発者が、手軽に利用できるライブラリを目指しています。
 
+
 ## デモンストレーション映像
 
-![PipeTRT v0.1.0 Demo](./assets/pipetrt0.1.0_demo_full.gif)
+![PipeTRT v0.1.0 Demo](./assets/pipetrt0.1.0_demo_lite.gif)
 
 
 ## リリース 0.1.0
@@ -30,7 +35,7 @@ PipeTRTの最初のリリースです。
 Palm DetectionとHand Landmarkの推論にはNVIDIA TensorRTを使用しています。
 
 > [!NOTE]
-> v0.1.0は初期リリースです。
+> v0.1.0は初期リリースです。  
 > APIや内部仕様は今後変更される可能性があります。
 
 
@@ -69,22 +74,34 @@ v0.1.0では以下の機能を利用できます。
 
 ## インストール
 
-現在はPyPIでは公開していないため、GitHubからインストールしてください。
+PipeTRTはPyPIからインストールできます。
 
-リポジトリをCloneします。
+```bash
+pip install pipetrt
+```
+
+インストール後、Pythonから以下のように読み込めます。
+
+```python
+import pipetrt
+```
+
+### GitHubからインストール
+
+開発版を使用する場合や、PipeTRTの開発に参加する場合はリポジトリをCloneしてください。
 
 ```bash
 git clone https://github.com/Konoa-1025/PipeTRT.git
 cd PipeTRT
 ```
 
-PipeTRTをインストールします。
+通常インストール：
 
 ```bash
 pip install .
 ```
 
-開発目的の場合はEditable Installも利用できます。
+開発目的でEditable Installを使用する場合：
 
 ```bash
 pip install -e .
