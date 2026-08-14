@@ -91,29 +91,45 @@ v0.1.1では以下の機能を利用できます。
 
 その他の環境については、現在検証中です。
 
-- 動作確認済み：3.8 / 3.11
-- パッケージ上の対応範囲：>=3.8,<3.12
-
 ## インストール
 
-現在はPyPIでは公開していないため、GitHubからインストールしてください。
+PipeTRTはPyPIからインストールできます。
 
-リポジトリをCloneします。
+```bash
+pip install pipetrt
+```
+
+対応Pythonバージョンは以下です。
+
+```text
+Python >= 3.8, < 3.12
+```
+
+現在、Python 3.8およびPython 3.11で動作確認を行っています。
+
+> [!NOTE]
+> PipeTRTはNVIDIA GPUおよびTensorRTを使用します。
+> CUDA・TensorRTなどの対応状況は、使用する環境によって異なる場合があります。
+
+
+### GitHubからインストール
+
+GitHub上のソースコードからインストールする場合は、リポジトリをCloneします。
 
 ```bash
 git clone https://github.com/Konoa-1025/PipeTRT.git
 cd PipeTRT
-```
-
-PipeTRTをインストールします。
-
-```bash
 pip install .
 ```
 
-開発目的の場合はEditable Installも利用できます。
+
+### 開発用インストール
+
+PipeTRT自体の開発やコードの変更を行う場合は、Editable Installを利用できます。
 
 ```bash
+git clone https://github.com/Konoa-1025/PipeTRT.git
+cd PipeTRT
 pip install -e .
 ```
 
@@ -208,7 +224,7 @@ result.hand_landmarks
 print(result.timings)
 ```
 
-Palm Detection、ROI変換、Landmark推論などの処理時間を確認できます。
+Palm Detection、ROI変換、Hand Landmark推論などの処理時間を確認できます。
 
 
 ## 処理の流れ
@@ -240,7 +256,7 @@ ROI Tracking
 - GitHub上などで公開されている情報・データを調査し、利用条件を確認した上で開発しています。使用・参考にしたものについては`reference.md`に記載しています。
 - このライブラリでは画像処理をローカル環境内で実行します。PipeTRT自体が画像を第三者へ送信したり、外部サーバーへ保存したりする機能はありません。
 - 使用しているデータ等について権利者から案内・通告があった場合、プログラムの修正や該当リリースの公開停止を行う場合があります。
-- 現在の開発状況については、各ブランチの「現在の進捗状況」を確認してください。
+- Pythonのバージョンが対応範囲内であっても、CUDA・TensorRT・NVIDIA GPUなどの環境によって動作状況が異なる場合があります。
 - このプロジェクトでは学習を目的としてAIを開発補助に使用しています。生成された内容をそのまま公開するのではなく、内容の確認・理解・独自の実装やリファクタリングを行った上でリリースしています。そのため、開発版とリリース版には時間差が生じる場合があります。最新の開発状況については`dev`ブランチを確認してください。
 
 
