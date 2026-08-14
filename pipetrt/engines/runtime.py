@@ -1,7 +1,10 @@
 import numpy as np
 import tensorrt as trt
 
-from cuda.bindings import runtime as cudart
+try:
+    from cuda.bindings import runtime as cudart
+except ImportError:
+    from cuda import cudart
 
 
 def check_cuda(result):
