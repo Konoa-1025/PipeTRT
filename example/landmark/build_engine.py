@@ -5,7 +5,7 @@ from pipetrt.engines.builder import build_engine
 
 def main():
     onnx_path = Path(
-        "models/hand_landmark_full.onnx"
+        "pipetrt/models/hand_landmark_full.onnx"
     )
 
     engine_path = Path(
