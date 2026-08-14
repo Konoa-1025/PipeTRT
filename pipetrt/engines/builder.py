@@ -13,13 +13,14 @@ def build_engine(
     onnx_path = Path(onnx_path)
     engine_path = Path(engine_path)
 
-    if precision not in (
-        "fp16",
-        "fp32"
-    ):
+    if precision not in ("fp16", "fp32"):
         raise ValueError(
             f"Unsupported precision: {precision}"
         )
+
+    trt_major_version = int(
+        trt.__version__.split(".")[0]
+    )
 
     build_onnx_path = onnx_path
     temporary_onnx_path = None
@@ -29,47 +30,47 @@ def build_engine(
     # =====================================
 
     if precision == "fp16":
-        try:
-            from modelopt.onnx.autocast import (
-                convert_to_mixed_precision
+        if trt_major_version >= 11:
+            try:
+                from modelopt.onnx.autocast import (
+                    convert_to_mixed_precision
+                )
+            except ImportError as error:
+                raise RuntimeError(
+                    "FP16 Engine generation with "
+                    "TensorRT 11 or later requires "
+                    "NVIDIA Model Optimizer."
+                ) from error
+
+            converted_model = (
+                convert_to_mixed_precision(
+                    onnx_path=str(onnx_path),
+                    low_precision_type="fp16",
+                    keep_io_types=True
+                )
             )
-        except ImportError as error:
-            raise RuntimeError(
-                "FP16 Engine generation requires "
-                "NVIDIA Model Optimizer. "
-                'Install it with: '
-                'pip install "nvidia-modelopt[onnx]"'
-            ) from error
 
-        converted_model = (
-            convert_to_mixed_precision(
-                onnx_path=str(
-                    onnx_path
-                ),
-                low_precision_type="fp16",
-                keep_io_types=True
+            temporary_file = (
+                tempfile.NamedTemporaryFile(
+                    suffix="_fp16.onnx",
+                    delete=False
+                )
             )
-        )
 
-        temporary_file = tempfile.NamedTemporaryFile(
-            suffix="_fp16.onnx",
-            delete=False
-        )
+            temporary_file.close()
 
-        temporary_file.close()
+            temporary_onnx_path = Path(
+                temporary_file.name
+            )
 
-        temporary_onnx_path = Path(
-            temporary_file.name
-        )
+            onnx.save(
+                converted_model,
+                temporary_onnx_path
+            )
 
-        onnx.save(
-            converted_model,
-            temporary_onnx_path
-        )
-
-        build_onnx_path = (
-            temporary_onnx_path
-        )
+            build_onnx_path = (
+                temporary_onnx_path
+            )
 
     # =====================================
     # TensorRT Build
@@ -103,24 +104,26 @@ def build_engine(
             parser.num_errors
         ):
             print(
-                parser.get_error(
-                    index
-                )
+                parser.get_error(index)
             )
 
-        if (
-            temporary_onnx_path
-            is not None
-        ):
+        if temporary_onnx_path is not None:
             temporary_onnx_path.unlink(
                 missing_ok=True
             )
 
         return False
 
-    config = (
-        builder.create_builder_config()
-    )
+    config = builder.create_builder_config()
+
+    # TensorRT 10以前ではBuilderFlag.FP16を使用
+    if (
+        precision == "fp16"
+        and trt_major_version < 11
+    ):
+        config.set_flag(
+            trt.BuilderFlag.FP16
+        )
 
     serialized_engine = (
         builder.build_serialized_network(
@@ -130,10 +133,7 @@ def build_engine(
     )
 
     if serialized_engine is None:
-        if (
-            temporary_onnx_path
-            is not None
-        ):
+        if temporary_onnx_path is not None:
             temporary_onnx_path.unlink(
                 missing_ok=True
             )
@@ -153,11 +153,7 @@ def build_engine(
             serialized_engine
         )
 
-    # 一時FP16 ONNX削除
-    if (
-        temporary_onnx_path
-        is not None
-    ):
+    if temporary_onnx_path is not None:
         temporary_onnx_path.unlink(
             missing_ok=True
         )
