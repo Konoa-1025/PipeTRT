@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=75.3","wheel"]
 build-backend = "setuptools.build_meta"
 
 
@@ -8,8 +8,8 @@ name = "pipetrt"
 version = "0.1.0"
 description = "TensorRT accelerated hand tracking library"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
-license = "Apache-2.0"
+requires-python = ">=3.8,<3.12"
+license = { file = "LICENSE" }
 
 authors = [
     { name = "Norifumi Kondo", email = "norifumi.kondo.it@gmail.com" }
