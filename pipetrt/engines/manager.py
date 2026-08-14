@@ -5,7 +5,10 @@ import sys
 from pathlib import Path
 
 import tensorrt as trt
-from cuda.bindings import runtime as cudart
+try:
+    from cuda.bindings import runtime as cudart
+except ImportError:
+    from cuda import cudart
 
 from pipetrt.engines.builder import build_engine
 
