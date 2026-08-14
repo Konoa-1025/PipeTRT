@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "pipetrt"
+version = "0.1.0"
+description = "TensorRT accelerated hand tracking library"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = "Apache-2.0"
+
+authors = [
+    { name = "Norifumi Kondo", email = "norifumi.kondo.it@gmail.com" }
+]
+
+keywords = [
+    "TensorRT",
+    "CUDA",
+    "hand-tracking",
+    "hand-landmark",
+    "computer-vision",
+]
+
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "tensorrt",
+    "cuda-python",
+    "onnx",
+    "nvidia-modelopt[onnx]",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/Konoa-1025/PipeTRT"
+Repository = "https://github.com/Konoa-1025/PipeTRT"
+Issues = "https://github.com/Konoa-1025/PipeTRT/issues"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pipetrt*"]
+exclude = ["engines*"]
+namespaces = false
+
+
+[tool.setuptools.package-data]
+pipetrt = [
+    "models/*.onnx"
+]
