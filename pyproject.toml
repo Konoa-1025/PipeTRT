@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipetrt"
-version = "0.1.0"
+version = "0.1.1"
 description = "TensorRT accelerated hand tracking library"
 readme = "README.md"
 requires-python = ">=3.8,<3.12"
@@ -30,6 +30,7 @@ dependencies = [
     "cuda-python",
     "onnx",
     "nvidia-modelopt[onnx]",
+    "pywin32; platform_system == 'Windows'",
 ]
 
 
