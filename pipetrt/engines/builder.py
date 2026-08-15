@@ -50,13 +50,13 @@ def build_engine(
                 'pip install "nvidia-modelopt[onnx]"'
             ) from error
 
-            converted_model = (
-                convert_to_mixed_precision(
-                    onnx_path=str(onnx_path),
-                    low_precision_type="fp16",
-                    keep_io_types=True
-                )
+        converted_model = (
+            convert_to_mixed_precision(
+                onnx_path=str(onnx_path),
+                low_precision_type="fp16",
+                keep_io_types=True
             )
+        )
 
         temporary_file = (
             tempfile.NamedTemporaryFile(
@@ -65,20 +65,13 @@ def build_engine(
             )
         )
 
-            temporary_file.close()
+        temporary_file.close()
 
-            temporary_onnx_path = Path(
-                temporary_file.name
-            )
+        temporary_onnx_path = Path(temporary_file.name)
 
-            onnx.save(
-                converted_model,
-                temporary_onnx_path
-            )
+        onnx.save(converted_model,temporary_onnx_path)
 
-            build_onnx_path = (
-                temporary_onnx_path
-            )
+        build_onnx_path = (temporary_onnx_path)
 
     # =====================================
     # TensorRT Build
