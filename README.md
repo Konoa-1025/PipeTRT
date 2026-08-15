@@ -16,22 +16,25 @@
   </a>
 </p>
 
-MediaPipe-inspired TensorRT hand landmark library for NVIDIA GPUs
-
 MediaPipeのハンドトラッキング構成を参考に開発した、NVIDIA GPU向けTensorRT手骨格検出ライブラリです。
 
 このプロジェクトは、MediaPipeのようなシンプルな使い方で、TensorRTによる高速な手の検出・21点ランドマーク推論を利用できるようにすることを目的としています。
 
 PipeTRTは、自分自身の開発だけではなく、将来同じようにJetsonやNVIDIA GPUを用いたエッジAI開発を行う学生や開発者が、手軽に利用できるライブラリを目指しています。
 
+
 ## デモンストレーション映像
 
 ![PipeTRT v0.1.0 Demo](./assets/pipetrt0.1.0_demo_full.gif)
 
 
-## リリース 0.1.1
+## リリース 0.1.2
 
-PipeTRT v0.1.1では、Python 3.8への対応を追加しました。
+PipeTRT v0.1.2では、TensorRTのバージョン差によるEngine生成処理の互換性を改善しました。
+
+TensorRTのメジャーバージョンを判定し、使用しているTensorRTに応じてEngine生成処理を切り替えます。
+
+これにより、従来のWindows + NVIDIA GeForce RTX環境に加えて、NVIDIA Jetson Xavier NX上のTensorRT 8.5環境でも動作を確認しました。
 
 現在はPython 3.8以上、3.12未満の環境を対象としています。
 
@@ -52,9 +55,20 @@ Palm DetectionとHand Landmarkの推論にはNVIDIA TensorRTを使用してい�
 > APIや内部仕様は今後変更される可能性があります。
 
 
+## v0.1.2の主な変更点
+
+- TensorRTのメジャーバージョン判定を追加
+- TensorRT 8系でのEngine生成に対応
+- TensorRT 8系で`EXPLICIT_BATCH`を使用する処理を追加
+- TensorRTのバージョンに応じたFP16 Engine生成処理を追加
+- NVIDIA Jetson Xavier NXでの動作確認
+- TensorRT 8.5.2.2での動作確認
+- Python 3.8環境での動作確認
+
+
 ## 機能
 
-v0.1.1では以下の機能を利用できます。
+v0.1.2では以下の機能を利用できます。
 
 - TensorRTによるPalm Detection
 - 手領域（ROI）の生成
@@ -67,29 +81,43 @@ v0.1.1では以下の機能を利用できます。
 - 静止画・リアルタイムカメラ映像への対応
 - 各処理の推論時間・処理時間の取得
 - Python 3.8以上への対応
+- TensorRTのバージョン差を考慮したEngine生成
 
 
 ## 動作確認環境
 
 現在、以下の環境で動作確認しています。
 
+### Windows
+
 - Windows
-- Python 3.8
-- Python 3.11
-- NVIDIA GPU
-- NVIDIA TensorRT
-- CUDA
-
-開発時の主な動作確認GPU：
-
+- Python 3.8 / 3.11
 - NVIDIA GeForce RTX 3070
+- NVIDIA CUDA
+- NVIDIA TensorRT
 
-対応Pythonバージョン：
+### NVIDIA Jetson
 
-- Python 3.8以上
-- Python 3.12未満
+以下の環境で動作を確認しています。
 
-その他の環境については、現在検証中です。
+- NVIDIA Jetson Xavier NX 8GB
+- JetPack 5.1.2
+- Python 3.8.10
+- CUDA 11.4
+- TensorRT 8.5.2.2
+
+> [!NOTE]
+> 現在Jetson環境については、Jetson Xavier NX + JetPack 5.1.2で動作確認を行っています。
+> すべてのJetsonシリーズおよびJetPackバージョンでの動作を保証するものではありません。
+
+### 対応Pythonバージョン
+
+```text
+Python >= 3.8, < 3.12
+```
+
+現在、Python 3.8およびPython 3.11で動作確認を行っています。
+
 
 ## インストール
 
@@ -104,8 +132,6 @@ pip install pipetrt
 ```text
 Python >= 3.8, < 3.12
 ```
-
-現在、Python 3.8およびPython 3.11で動作確認を行っています。
 
 > [!NOTE]
 > PipeTRTはNVIDIA GPUおよびTensorRTを使用します。
@@ -257,6 +283,7 @@ ROI Tracking
 - このライブラリでは画像処理をローカル環境内で実行します。PipeTRT自体が画像を第三者へ送信したり、外部サーバーへ保存したりする機能はありません。
 - 使用しているデータ等について権利者から案内・通告があった場合、プログラムの修正や該当リリースの公開停止を行う場合があります。
 - Pythonのバージョンが対応範囲内であっても、CUDA・TensorRT・NVIDIA GPUなどの環境によって動作状況が異なる場合があります。
+- Jetsonについては現在Jetson Xavier NX + JetPack 5.1.2環境で動作確認を行っており、その他のJetsonシリーズ・JetPackバージョンについては検証中です。
 - このプロジェクトでは学習を目的としてAIを開発補助に使用しています。生成された内容をそのまま公開するのではなく、内容の確認・理解・独自の実装やリファクタリングを行った上でリリースしています。そのため、開発版とリリース版には時間差が生じる場合があります。最新の開発状況については`dev`ブランチを確認してください。
 
 
