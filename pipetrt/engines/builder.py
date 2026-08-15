@@ -29,18 +29,26 @@ def build_engine(
     # FP16
     # =====================================
 
-    if precision == "fp16":
-        if trt_major_version >= 11:
-            try:
-                from modelopt.onnx.autocast import (
-                    convert_to_mixed_precision
-                )
-            except ImportError as error:
-                raise RuntimeError(
-                    "FP16 Engine generation with "
-                    "TensorRT 11 or later requires "
-                    "NVIDIA Model Optimizer."
-                ) from error
+    # TensorRT 11以降では
+    # BuilderFlag.FP16が使用できないため、
+    # ModelOptでONNXをMixed Precision化する
+    if (
+        precision == "fp16"
+        and trt_major_version >= 11
+    ):
+        try:
+            from modelopt.onnx.autocast import (
+                convert_to_mixed_precision
+            )
+
+        except ImportError as error:
+            raise RuntimeError(
+                "FP16 Engine generation with "
+                "TensorRT 11 or later requires "
+                "NVIDIA Model Optimizer. "
+                'Install it with: '
+                'pip install "nvidia-modelopt[onnx]"'
+            ) from error
 
             converted_model = (
                 convert_to_mixed_precision(
@@ -50,12 +58,12 @@ def build_engine(
                 )
             )
 
-            temporary_file = (
-                tempfile.NamedTemporaryFile(
-                    suffix="_fp16.onnx",
-                    delete=False
-                )
+        temporary_file = (
+            tempfile.NamedTemporaryFile(
+                suffix="_fp16.onnx",
+                delete=False
             )
+        )
 
             temporary_file.close()
 
@@ -84,7 +92,26 @@ def build_engine(
         logger
     )
 
-    network = builder.create_network()
+    # =====================================
+    # Network
+    # =====================================
+
+    # TensorRT 8系ではONNX Parser利用時に
+    # EXPLICIT_BATCHを明示する必要がある
+    if trt_major_version < 10:
+        network_flags = (
+            1
+            << int(
+                trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH
+            )
+        )
+
+        network = builder.create_network(
+            network_flags
+        )
+
+    else:
+        network = builder.create_network()
 
     parser = trt.OnnxParser(
         network,
@@ -114,9 +141,16 @@ def build_engine(
 
         return False
 
-    config = builder.create_builder_config()
+    config = (
+        builder.create_builder_config()
+    )
 
-    # TensorRT 10以前ではBuilderFlag.FP16を使用
+    # =====================================
+    # TensorRT 10以前 FP16
+    # =====================================
+
+    # TensorRT 8.xなどでは
+    # BuilderFlag.FP16を利用する
     if (
         precision == "fp16"
         and trt_major_version < 11
@@ -124,6 +158,10 @@ def build_engine(
         config.set_flag(
             trt.BuilderFlag.FP16
         )
+
+    # =====================================
+    # Engine Build
+    # =====================================
 
     serialized_engine = (
         builder.build_serialized_network(
@@ -152,6 +190,10 @@ def build_engine(
         file.write(
             serialized_engine
         )
+
+    # =====================================
+    # Temporary ONNX Cleanup
+    # =====================================
 
     if temporary_onnx_path is not None:
         temporary_onnx_path.unlink(
